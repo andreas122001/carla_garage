@@ -467,11 +467,11 @@ class DataAgent(AutoPilot):
                 flag = not flag
             wp = wp.get_left_lane() if flag else wp.get_right_lane()
             
-            is_opposite = ego_wp.lane_id * wp.lane_id < 0
-                
             if wp is None or wp.lane_type == carla.LaneType.Driving and ego_wp.lane_id * wp.lane_id < 0:
                 break
             
+            is_opposite = ego_wp.lane_id * wp.lane_id < 0
+                
             if wp.lane_type != carla.LaneType.Driving:
                 remove_lanes_for_lane_relative_to_ego += 1
 
