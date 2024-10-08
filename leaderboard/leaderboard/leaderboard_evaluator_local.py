@@ -17,7 +17,7 @@ import traceback
 import argparse
 from argparse import RawTextHelpFormatter
 from datetime import datetime
-from distutils.version import LooseVersion
+from packaging.version import Version
 import importlib
 import os
 import pkg_resources
@@ -86,10 +86,11 @@ class LeaderboardEvaluator(object):
 
         # Setup the simulation
         self.client, self.client_timeout, self.traffic_manager, self.traffic_manager_port = self._setup_simulation(args)
+        print("Simulation setup complete.")
 
         dist = pkg_resources.get_distribution("carla")
         if dist.version != 'leaderboard':
-            if LooseVersion(dist.version) < LooseVersion('0.9.10'):
+            if Version(dist.version) < Version('0.9.10'):
                 raise ImportError("CARLA version 0.9.10.1 or newer required. CARLA version found: {}".format(dist))
 
         # Load agent
@@ -200,7 +201,12 @@ class LeaderboardEvaluator(object):
             synchronous_mode = True,
             fixed_delta_seconds = 1.0 / self.frame_rate
         )
-        client.get_world().apply_settings(settings)
+        print("Settubg wirkd-...")
+        print(client.get_available_maps())
+        world = client.get_world()
+        print("wolrd")
+        world.apply_settings(settings)
+        print("Wirld set!")
 
         traffic_manager_port = self.find_free_port()
         traffic_manager = client.get_trafficmanager(traffic_manager_port)

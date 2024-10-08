@@ -25,7 +25,7 @@ export CHECKPOINT_ENDPOINT=${PTH_ROUTE}.json
 export TEAM_CONFIG=${PTH_ROUTE}.xml
 export PTH_LOG='logs'
 export RESUME=1
-export DATAGEN=1
+export DATAGEN=0
 export SAVE_PATH='logs'
 export TM_SEED=0
 
