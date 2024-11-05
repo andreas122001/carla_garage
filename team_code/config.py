@@ -25,6 +25,9 @@ class GlobalConfig:
 
   def __init__(self):
     """ base architecture configurations """
+
+    # CUSTOM
+    self.scale = 0.5
     # -----------------------------------------------------------------------------
     # Autopilot
     # -----------------------------------------------------------------------------
@@ -102,7 +105,7 @@ class GlobalConfig:
 
     # Therefore their size is smaller
     self.camera_width = 1024  # Camera width in pixel during data collection
-    self.camera_height = 256  # Camera height in pixel during data collection
+    self.camera_height = 512  # Camera height in pixel during data collection
     self.camera_fov = 110
 
     # -----------------------------------------------------------------------------
@@ -123,7 +126,7 @@ class GlobalConfig:
     self.num_lidar_hits_for_detection = 7
     # How many pixels make up 1 meter.
     # 1 / pixels_per_meter = size of pixel in meters
-    self.pixels_per_meter = 4.0
+    self.pixels_per_meter = 1.0  # TODO: check if correct
     # Max number of LiDAR points per pixel in voxelized LiDAR
     self.hist_max_per_pixel = 5
     # Height at which the LiDAR points are split into the 2 channels.
@@ -132,20 +135,32 @@ class GlobalConfig:
     self.realign_lidar = True
     self.use_ground_plane = False
     # Max and minimum LiDAR ranges used for voxelization
-    self.min_x = -32
-    self.max_x = 32
-    self.min_y = -32
-    self.max_y = 32
-    self.min_z = -4
-    self.max_z = 4
+    self.min_x = -64  # TODO: check if correct
+    self.max_x = 64
+    self.min_y = -64
+    self.max_y = 64
+    self.min_z = -8
+    self.max_z = 8
     self.min_z_projection = -10
     self.max_z_projection = 14
     # Bin in for the target speed one hot vector.
-    self.target_speed_bins = [
-        self.target_speed_walker + 0.1, self.target_speed_slow + 0.1, self.target_speed_fast + 0.1
-    ]
-    # Index 0 is the brake action
-    self.target_speeds = [0.0, self.target_speed_walker, self.target_speed_slow, self.target_speed_fast]
+    self.target_speed_bins = [bin_ + 0.1 for bin_ in [
+        self.target_speed_walker, 
+        self.target_speed_slow, 
+        self.target_speed_fast,
+        11.11,
+        13.88,
+    ]]
+    # Index 0 is the brake action   
+    self.target_speeds = [
+      0.0, 
+      self.target_speed_walker, 
+      self.target_speed_slow, 
+      self.target_speed_fast, 
+      11.11, 
+      13.88,
+      21.0
+    ]  # TODO: Check if correct
     # Angle bin thresholds
     self.angle_bins = [-0.375, -0.125, 0.125, 0.375]
     # Discrete steering angles
@@ -155,7 +170,15 @@ class GlobalConfig:
     self.estimate_semantic_distribution = False
     # Class weights applied to the cross entropy losses
     # Computed from the v07 all dataset
-    self.target_speed_weights = [0.866605263873406, 7.4527377240841775, 1.2281629310898465, 0.5269622904065803]
+    self.target_speed_weights = [
+      1.0751805823984797,
+      2.4468032827165955,
+      1.8424704423927323,
+      0.790273556231003,
+      0.44271354326437884,
+      5.380376053598444,
+      0.7100077004249494,
+    ]
     self.angle_weights = [
         204.25901201602136, 7.554315623148331, 0.21388916461734406, 5.476446162657503, 207.86684782608697
     ]
@@ -190,7 +213,7 @@ class GlobalConfig:
     self.num_route_points = 20
     self.augment_percentage = 0.5  # Probability of the augmented sample being used.
     self.learn_origin = 1  # Whether to learn the origin of the waypoints or use 0 / 0
-    self.augment = 1  # Whether to use rotation and translation augmentation
+    self.augment = 0  # Whether to use rotation and translation augmentation
     # If this is true we convert the batch norms, to synced bach norms.
     self.sync_batch_norm = False
     # At which interval to save debug files to disk during training
@@ -415,6 +438,12 @@ class GlobalConfig:
         0,  # dynamic
         0,  # water
         0,  # terrain
+        0,  # I DON'T KNOW
+        0,  # ALSO DON'T KNOW
+        0,
+        0,
+        0,
+        0
     ]
 
     self.bev_converter = [
@@ -548,51 +577,56 @@ class GlobalConfig:
       setattr(self, k, v)
 
     self.root_dir = root_dir
+    if True or 'auto_data' in kwargs and kwargs['auto_data']:
 
-    if setting == 'all':
-      first_val_town = 'this_key_does_not_exist'
-      second_val_town = 'this_key_does_not_exist'
-    elif setting == '02_05_withheld':
-      first_val_town = 'Town02'
-      second_val_town = 'Town05'
-    elif setting == '01_03_withheld':
-      first_val_town = 'Town01'
-      second_val_town = 'Town03'
-    elif setting == '04_06_withheld':
-      first_val_town = 'Town04'
-      second_val_town = 'Town06'
-    elif setting == 'eval':
-      return
-    else:
-      raise ValueError(f'Error: Selected setting: {setting} does not exist.')
+      if setting == 'all':
+        first_val_town = 'validation'
+        second_val_town = 'testing'
+      elif setting == '02_05_withheld':
+        first_val_town = 'Town02'
+        second_val_town = 'Town05'
+      elif setting == '01_03_withheld':
+        first_val_town = 'Town01'
+        second_val_town = 'Town03'
+      elif setting == '04_06_withheld':
+        first_val_town = 'Town04'
+        second_val_town = 'Town06'
+      elif setting == 'eval':
+        return
+      else:
+        raise ValueError(f'Error: Selected setting: {setting} does not exist.')
 
-    print('Setting: ', setting)
-    self.train_towns = os.listdir(self.root_dir)  # Scenario Folders
-    self.val_towns = self.train_towns
-    self.train_data, self.val_data = [], []
-    for town in self.train_towns:
-      root_files = os.listdir(os.path.join(self.root_dir, town))  # Town folders
-      for file in root_files:
-        # Only load as many repetitions as specified
-        repetition = int(re.search('Repetition(\\d+)', file).group(1))
-        if repetition >= self.num_repetitions:
-          continue
-        # We don't train on two towns and reserve them for validation
-        if ((file.find(first_val_town) != -1) or (file.find(second_val_town) != -1)):
-          continue
-        if not os.path.isfile(os.path.join(self.root_dir, file)):
-          self.train_data.append(os.path.join(self.root_dir, town, file))
-    for town in self.val_towns:
-      root_files = os.listdir(os.path.join(self.root_dir, town))
-      for file in root_files:
-        repetition = int(re.search('Repetition(\\d+)', file).group(1))
-        if repetition >= self.num_repetitions:
-          continue
-        # Only use withheld towns for validation
-        if ((file.find(first_val_town) == -1) and (file.find(second_val_town) == -1)):
-          continue
-        if not os.path.isfile(os.path.join(self.root_dir, file)):
-          self.val_data.append(os.path.join(self.root_dir, town, file))
+      print('Setting: ', setting)
+      self.train_towns = os.listdir(self.root_dir)  # Scenario Folders
+      self.val_towns = self.train_towns
+      self.train_data, self.val_data = [], []
+      for town in self.train_towns:
+        # print("town", town)
+        root_files = os.listdir(os.path.join(self.root_dir, town))  # Town folders
+        for file in root_files:
+          # print("file", file)
+          # Only load as many repetitions as specified
+          repetition = int(re.search('Repetition(\\d+)', file).group(1))
+          if repetition >= self.num_repetitions:
+            continue
+          # We don't train on two towns and reserve them for validation
+          if ((file.find(first_val_town) != -1) or (file.find(second_val_town) != -1)):
+            continue
+          if not os.path.isfile(os.path.join(self.root_dir, file)):
+            self.train_data.append(os.path.join(self.root_dir, town, file))
+      for town in self.val_towns:
+        # print("town", town)
+        root_files = os.listdir(os.path.join(self.root_dir, town))
+        for file in root_files:
+          # print("file", file)
+          repetition = int(re.search('Repetition(\\d+)', file).group(1))
+          if repetition >= self.num_repetitions:
+            continue
+          # Only use withheld towns for validation
+          if ((file.find(first_val_town) == -1) and (file.find(second_val_town) == -1)):
+            continue
+          if not os.path.isfile(os.path.join(self.root_dir, file)):
+            self.val_data.append(os.path.join(self.root_dir, town, file))
 
-    if setting == 'all':
-      self.val_data.append(self.train_data[0])  # Dummy
+      if setting == 'all':
+        self.val_data.append(self.train_data[0])  # Dummy
