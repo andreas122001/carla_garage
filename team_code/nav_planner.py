@@ -1,5 +1,5 @@
 """
-Some helpful classes for planning and control for the privileged autopilot
+This file implements the class used for data generation for the high level commands and the target waypoints
 """
 
 import math
@@ -7,48 +7,14 @@ from copy import deepcopy
 from collections import deque
 import xml.etree.ElementTree as ET
 import numpy as np
-
+import carla
+import warnings
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-
-
-class PIDController(object):
-  """
-    PID controller
-    """
-
-  def __init__(self, k_p=1.0, k_i=0.0, k_d=0.0, n=20):
-    self.k_p = k_p
-    self.k_i = k_i
-    self.k_d = k_d
-
-    self._saved_window = deque([0 for _ in range(n)], maxlen=n)
-    self._window = deque([0 for _ in range(n)], maxlen=n)
-    self._max = 0.0
-    self._min = 0.0
-
-  def step(self, error):
-    self._window.append(error)
-    if len(self._window) >= 2:
-      integral = sum(self._window) / len(self._window)
-      derivative = (self._window[-1] - self._window[-2])
-    else:
-      integral = 0.0
-      derivative = 0.0
-
-    return self.k_p * error + self.k_i * integral + self.k_d * derivative
-
-  def save(self):
-    self._saved_window = deepcopy(self._window)
-
-  def load(self):
-    self._window = self._saved_window
-
 
 class RoutePlanner(object):
   """
-    Gets the next waypoint along a path
-    """
+  Gets the next waypoint along a path
+  """
 
   def __init__(self, min_distance, max_distance):
     self.saved_route = deque()
@@ -60,9 +26,8 @@ class RoutePlanner(object):
     self.max_distance = max_distance
     self.is_last = False
 
-    # for carla 9.10
-    self.mean = np.array([0.0, 0.0])
-    self.scale = np.array([111324.60662786, 111319.490945])
+    self.mean = np.array([0.0, 0.0, 0.0])
+    self.scale = np.array([111319.49082349832, 111319.49079327358, 1.0])
 
   def convert_gps_to_carla(self, gps):
     """
@@ -73,21 +38,31 @@ class RoutePlanner(object):
     gps = (gps - self.mean) * self.scale
     # GPS uses a different coordinate system than CARLA.
     # This converts from GPS -> CARLA (90° rotation)
-    gps = np.array([gps[1], -gps[0]])
+    gps = np.array([gps[1], -gps[0], gps[2]])
     return gps
 
-  def set_route(self, global_plan, gps=False):
+  def set_route(self, global_plan, gps=False, carla_map=None):
     self.route.clear()
 
     for pos, cmd in global_plan:
       if gps:
-        pos = np.array([pos['lat'], pos['lon']])
+        warnings.warn('deprecated', DeprecationWarning)
+        pos = np.array([pos['lat'], pos['lon'], pos['z']])
         pos = self.convert_gps_to_carla(pos)
       else:
-        pos = np.array([pos.location.x, pos.location.y])
+        # important to use the z variable, otherwise there are some rare bugs at
+        # carla.map.get_waypoint(carla.Location) and the wrong wp is returned
+        pos = np.array([pos.location.x, pos.location.y, pos.location.z])
         pos -= self.mean
 
       self.route.append((pos, cmd))
+
+    if carla_map is not None:
+      for _ in range(50):
+        loc = carla.Location(x=self.route[-1][0][0], y=self.route[-1][0][1], z=self.route[-1][0][2])
+        next_loc = carla_map.get_waypoint(loc).next(1)[0].transform.location
+        next_loc = np.array([next_loc.x, next_loc.y, next_loc.z])
+        self.route.append((next_loc, self.route[-1][1]))
 
     # We do the calculations in the beginning once so that we don't have
     # to do them every time in run_step
@@ -112,7 +87,7 @@ class RoutePlanner(object):
 
       cumulative_distance += self.route_distances[i]
 
-      diff = self.route[i][0] - gps
+      diff = self.route[i][0][:2] - gps
       distance = (diff[0]**2 + diff[1]**2)**0.5
 
       if farthest_in_range < distance <= self.min_distance:
@@ -127,16 +102,25 @@ class RoutePlanner(object):
     return self.route
 
   def save(self):
-    self.saved_route = deepcopy(self.route)
+    # because self.route saves objects of traffic lights and traffic signs a deep copy is not possible
+    self.saved_route = []
+    for (loc, cmd, d_traffic, traffic, d_stop, stop, speed_limit, corrected_speed_limit) in self.route:
+      self.saved_route.append((np.copy(loc), cmd, d_traffic, traffic, d_stop, stop, speed_limit, \
+                                                                                    corrected_speed_limit))
+
+    self.saved_route = deque(self.saved_route)
     self.saved_route_distances = deepcopy(self.route_distances)
 
   def load(self):
     self.route = self.saved_route
     self.route_distances = self.saved_route_distances
     self.is_last = False
+    self.route = self.saved_route
+    self.route_distances = self.saved_route_distances
+    self.is_last = False
 
 
-def interpolate_trajectory(world_map, waypoints_trajectory, hop_resolution=1.0, max_len=100):
+def interpolate_trajectory(world_map, waypoints_trajectory, hop_resolution=1.0, max_len=400):
   """
     Given some raw keypoints interpolate a full dense trajectory to be used
     by the user.
@@ -150,12 +134,13 @@ def interpolate_trajectory(world_map, waypoints_trajectory, hop_resolution=1.0, 
         trajectory going to be made
     """
 
-  dao = GlobalRoutePlannerDAO(world_map, hop_resolution)
-  grp = GlobalRoutePlanner(dao)
-  grp.setup()
+  grp = GlobalRoutePlanner(world_map, hop_resolution)
   # Obtain route plan
+  lat_ref, lon_ref = _get_latlon_ref(world_map)
+
   route = []
-  # Goes until the one before the last.
+  gps_route = []
+
   for i in range(len(waypoints_trajectory) - 1):
     waypoint = waypoints_trajectory[i]
     waypoint_next = waypoints_trajectory[i + 1]
@@ -164,12 +149,12 @@ def interpolate_trajectory(world_map, waypoints_trajectory, hop_resolution=1.0, 
       if len(interpolated_trace) > max_len:
         waypoints_trajectory[i + 1] = waypoints_trajectory[i]
       else:
-        for wp_tuple in interpolated_trace:
-          route.append((wp_tuple[0].transform, wp_tuple[1]))
+        for wp, connection in interpolated_trace:
+          route.append((wp.transform, connection))
+          gps_coord = _location_to_gps(lat_ref, lon_ref, wp.transform.location)
+          gps_route.append((gps_coord, connection))
 
-  lat_ref, lon_ref = _get_latlon_ref(world_map)
-
-  return location_route_to_gps(route, lat_ref, lon_ref), route
+  return gps_route, route
 
 
 def extrapolate_waypoint_route(waypoint_route, route_points):
