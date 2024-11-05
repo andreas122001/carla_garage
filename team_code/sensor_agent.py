@@ -16,7 +16,7 @@ import torch.nn.functional as F
 import numpy as np
 import math
 
-from leaderboard.autoagents import autonomous_agent
+from leaderboard.autoagents import autonomous_agent, autonomous_agent_local
 from model import LidarCenterNet
 from config import GlobalConfig
 from data import CARLA_Data
@@ -46,12 +46,12 @@ def get_entry_point():
   return 'SensorAgent'
 
 
-class SensorAgent(autonomous_agent.AutonomousAgent):
+class SensorAgent(autonomous_agent_local.AutonomousAgent):
   """
     Main class that runs the agents with the run_step function
     """
 
-  def setup(self, path_to_conf_file, route_index=None):
+  def setup(self, path_to_conf_file, route_index=None, traffic_manager=None):
     """Sets up the agent. route_index is for logging purposes"""
 
     torch.cuda.empty_cache()
@@ -69,6 +69,17 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
     self.config = GlobalConfig()
     # Overwrite all properties that were set in the saved config.
     self.config.__dict__.update(loaded_config.__dict__)
+    # self.config.pixels_per_meter = 2.0
+    # self.config.min_x = -(256 / self.config.pixels_per_meter) / 2
+    # self.config.max_x = (256 / self.config.pixels_per_meter) / 2
+    # self.config.min_y = -(256 / self.config.pixels_per_meter) / 2
+    # self.config.max_y = (256 / self.config.pixels_per_meter) / 2
+    # self.config.min_z = -(64 / self.config.pixels_per_meter) / 2
+    # self.config.max_z = (64 / self.config.pixels_per_meter) / 2
+    # self.config.min_z_projection = -40
+    # self.config.max_z_projection = 14 * 4
+    # self.lidar_resolution_width = 128
+    # self.lidar_resolution_height = 128
 
     # For models supporting different output modalities we select which one to use here.
     # 0: Waypoints
@@ -115,7 +126,7 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
     self.nets = []
     self.model_count = 0  # Counts how many models are in our ensemble
     for file in os.listdir(path_to_conf_file):
-      if file.endswith('.pth'):
+      if file.endswith('model_0030.pth'):
         self.model_count += 1
         print(os.path.join(path_to_conf_file, file))
         net = LidarCenterNet(self.config)
@@ -137,7 +148,7 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
     self.commands = deque(maxlen=2)
     self.commands.append(4)
     self.commands.append(4)
-    self.target_point_prev = [1e5, 1e5]
+    self.target_point_prev = [1e5, 1e5, 1e5]
 
     # Filtering
     self.points = MerweScaledSigmaPoints(n=4, alpha=0.00001, beta=2, kappa=0, subtract=residual_state_x)
@@ -285,7 +296,7 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
     rgb = np.concatenate(rgb, axis=1)
     rgb = torch.from_numpy(rgb).to(self.device, dtype=torch.float32).unsqueeze(0)
 
-    gps_pos = self._route_planner.convert_gps_to_carla(input_data['gps'][1][:2])
+    gps_pos = self._route_planner.convert_gps_to_carla(input_data['gps'][1])
     speed = input_data['speed'][1]['speed']
     compass = t_u.preprocess_compass(input_data['imu'][1][-1])
 
@@ -308,7 +319,7 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
 
     result['gps'] = filtered_state[0:2]
 
-    waypoint_route = self._route_planner.run_step(filtered_state[0:2])
+    waypoint_route = self._route_planner.run_step(result['gps'])
 
     if len(waypoint_route) > 2:
       target_point, far_command = waypoint_route[1]
@@ -324,7 +335,7 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
     one_hot_command = t_u.command_to_one_hot(self.commands[-2])
     result['command'] = torch.from_numpy(one_hot_command[np.newaxis]).to(self.device, dtype=torch.float32)
 
-    ego_target_point = t_u.inverse_conversion_2d(target_point, result['gps'], result['compass'])
+    ego_target_point = t_u.inverse_conversion_2d(target_point[:2], result['gps'], result['compass'])
     ego_target_point = torch.from_numpy(ego_target_point[np.newaxis]).to(self.device, dtype=torch.float32)
 
     result['target_point'] = ego_target_point
