@@ -42,7 +42,7 @@ class GlobalConfig:
         # Distance of obstacles (in meters) in which we will check for collisions
         self.detection_radius = 50.0
         # Distance of walker (in meters) in which we will check for collisions
-        self.distance_for_walker_speed = 1.0  # set that dynamically later
+        self.distance_for_walker_speed = 1.0 # set that dynamically later
         # Variables for detecting stuck vehicles
         self.stuck_buffer_size = 30
         self.stuck_vel_threshold = 0.1
@@ -57,9 +57,9 @@ class GlobalConfig:
         # Safety distance that we model other traffic participants to keep.
         self.traffic_safety_box_length = 1.9
         # Distance of traffic lights considered relevant (in meters)
-        self.light_radius = 15.0
+        self.light_radius = 64.0
         # Bounding boxes in this radius around the car will be saved in the dataset.
-        self.bb_save_radius = 40.0
+        self.bb_save_radius = 64.0
         # Number of meters we will keep a distance from vehicles in front of us.
         self.safety_box_safety_margin = 2.5
         # Whether the forecast will consider that vehicles yield to other cars in front of them.
@@ -437,8 +437,8 @@ class GlobalConfig:
         self.camera_rot_0 = [0.0, 0.0, 0.0]  # Roll Pitch Yaw of camera 0 in degree
 
         # Therefore their size is smaller
-        self.camera_width = 1024  # Camera width in pixel during data collection
-        self.camera_height = 512  # Camera height in pixel during data collection
+        self.camera_width = 1024  # Camera width in pixel during data collection and eval (affects sensor agent)
+        self.camera_height = 512  # Camera height in pixel during data collection and eval (affects sensor agent)
         self.camera_fov = 110
 
         # -----------------------------------------------------------------------------
@@ -476,12 +476,7 @@ class GlobalConfig:
         self.max_z = 4
         self.min_z_projection = -10
         self.max_z_projection = 14
-        # Bin in for the target speed one hot vector.
-        self.target_speed_bins = [
-            self.target_speed_walker + 0.1, self.target_speed_slow + 0.1, self.target_speed_fast + 0.1
-        ]
-        # Index 0 is the brake action
-        self.target_speeds = [0.0, self.target_speed_walker, self.target_speed_slow, self.target_speed_fast]
+
         # Angle bin thresholds
         self.angle_bins = [-0.375, -0.125, 0.125, 0.375]
         # Discrete steering angles
@@ -490,8 +485,6 @@ class GlobalConfig:
         self.estimate_class_distributions = False
         self.estimate_semantic_distribution = False
         # Class weights applied to the cross entropy losses
-        # Computed from the v07 all dataset
-        self.target_speed_weights = [0.866605263873406, 7.4527377240841775, 1.2281629310898465, 0.5269622904065803]
         self.angle_weights = [
             204.25901201602136, 7.554315623148331, 0.21388916461734406, 5.476446162657503, 207.86684782608697
         ]
@@ -499,10 +492,13 @@ class GlobalConfig:
         self.semantic_weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         self.bev_semantic_weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
-        # # -----------------------------------------------------------------------------
-        # # DataAgent
-        # # -----------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------
+        # DataAgent
+        # -----------------------------------------------------------------------------
         self.augment = 1  # Whether to use rotation and translation augmentation
+
+        # Whether the model in and outputs will be visualized and saved into SAVE_PATH
+        self.debug = False
 
         # -----------------------------------------------------------------------------
         # Logger
@@ -552,5 +548,5 @@ class GlobalConfig:
 
         # Probability 0 - 1. If the confidence in the brake action is higher than this
         # value brake is chosen as the action.
-        self.brake_uncertainty_threshold = 0.5
+        self.brake_uncertainty_threshold = 0.9  # 1 means that it is not used at all 
         self.checkpoint_buffer_len = 10  # Number of time steps that we use for route consistency
