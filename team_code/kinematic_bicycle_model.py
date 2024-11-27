@@ -8,6 +8,7 @@ import numpy as np
 class KinematicBicycleModel():
     """
     Kinematic bicycle model describing the motion of a car given its state and action.
+    Tuned parameters are taken from World on Rails.
     """
 
     def __init__(self, config):
@@ -85,7 +86,7 @@ class KinematicBicycleModel():
         # We use different polynomial models for estimating the speed if whether the ego vehicle brakes or not.
         if brake:
             speed_kph = speed * 3.6
-            features = speed_kph**np.arange(1, 8)
+            features = speed_kph ** np.arange(1, 8)
             next_speed_kph = features @ self.brake_values
             next_speed = next_speed_kph / 3.6
         else:
@@ -97,10 +98,14 @@ class KinematicBicycleModel():
                 next_speed = speed
             else:
                 speed_kph = speed * 3.6
-                features = np.array([
-                    speed_kph, speed_kph**2, throttle, throttle**2, speed_kph * throttle, speed_kph * throttle**2,
-                    speed_kph**2 * throttle, speed_kph**2 * throttle**2
-                ]).T
+                features = np.array([speed_kph,
+                                    speed_kph**2,
+                                    throttle,
+                                    throttle**2,
+                                    speed_kph * throttle,
+                                    speed_kph * throttle**2,
+                                    speed_kph**2 * throttle,
+                                    speed_kph**2 * throttle**2]).T
 
                 next_speed_kph = features @ self.throttle_values
                 next_speed = next_speed_kph / 3.6

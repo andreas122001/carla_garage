@@ -350,6 +350,37 @@ class DataAgent(AutoPilot):
             self.augmented_vehicle_dummy.bounding_box = bb_copy
             self.augmented_vehicle_dummy.transform = transform_copy
 
+    def _get_night_mode(self, weather):
+        """Check wheather or not the street lights need to be turned on"""
+        SUN_ALTITUDE_THRESHOLD_1 = 15
+        SUN_ALTITUDE_THRESHOLD_2 = 165
+
+        # For higher fog and cloudness values, the amount of light in scene starts to rapidly decrease
+        CLOUDINESS_THRESHOLD = 80
+        FOG_THRESHOLD = 40
+
+        # In cases where more than one weather conditition is active, decrease the thresholds
+        COMBINED_THRESHOLD = 10
+
+        altitude_dist = weather.sun_altitude_angle - SUN_ALTITUDE_THRESHOLD_1
+        altitude_dist = min(altitude_dist, SUN_ALTITUDE_THRESHOLD_2 - weather.sun_altitude_angle)
+        cloudiness_dist = CLOUDINESS_THRESHOLD - weather.cloudiness
+        fog_density_dist = FOG_THRESHOLD - weather.fog_density
+
+        # Check each parameter independetly
+        if altitude_dist < 0 or cloudiness_dist < 0 or fog_density_dist < 0:
+            return True
+
+        # Check if two or more values are close to their threshold
+        joined_threshold = int(altitude_dist < COMBINED_THRESHOLD)
+        joined_threshold += int(cloudiness_dist < COMBINED_THRESHOLD)
+        joined_threshold += int(fog_density_dist < COMBINED_THRESHOLD)
+
+        if joined_threshold >= 2:
+            return True
+
+        return False
+
     def shuffle_weather(self):
         # change weather for visual diversity
         if self.weather_tmp is None:
@@ -364,7 +395,7 @@ class DataAgent(AutoPilot):
         
         # night mode
         vehicles = self._world.get_actors().filter('*vehicle*')
-        if self.weather_tmp.sun_altitude_angle < 0.0:
+        if self._get_night_mode(weather):
             for vehicle in vehicles:
                 vehicle.set_light_state(carla.VehicleLightState(self._vehicle_lights))
         else:
@@ -453,7 +484,7 @@ class DataAgent(AutoPilot):
         relative_pos = t_u.get_relative_transform(ego_matrix, ego_matrix)
 
         ego_wp = self.world_map.get_waypoint(self._vehicle.get_location(), project_to_road=True, lane_type=carla.libcarla.LaneType.Any)
-        
+
         # to compute lane_relative_to_ego for walkers and other cars we first have to precompute some in which direction the opposite lane is & the width of the center lane
         left_wp, right_wp = ego_wp.get_left_lane(), ego_wp.get_right_lane()
         left_decreasing_lane_id = left_wp is not None and left_wp.lane_id < ego_wp.lane_id or right_wp is not None and right_wp.lane_id > ego_wp.lane_id
@@ -665,7 +696,7 @@ class DataAgent(AutoPilot):
                     next_next_wps = []
                     for i, wp in enumerate(next_lane_wps):
                         next_next_wps = self._wps_next_until_lane_end(wp)
-                    
+
                     try:
                         next_next_lane_wps = next_next_wps[-1].next(1)
                         if len(next_next_lane_wps) == 0:

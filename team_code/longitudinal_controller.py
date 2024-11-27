@@ -100,9 +100,9 @@ class LongitudinalPIDController(LongitudinalController):
             throttle, brake = 0., True
             return throttle, brake
 
-        target_speed = max(self.minimum_target_speed, target_speed)  # Avoid very small target speeds
+        target_speed = max(self.minimum_target_speed, target_speed) # Avoid very small target speeds
 
-        current_speed, target_speed = 3.6 * current_speed, 3.6 * target_speed  # Convert to km/h
+        current_speed, target_speed = 3.6 * current_speed, 3.6 * target_speed # Convert to km/h
 
         # Test if the speed is "much" larger than the target speed
         if current_speed / target_speed > self.braking_ratio:
@@ -181,7 +181,7 @@ class LongitudinalLinearRegressionController(LongitudinalController):
         """
         if target_speed < 1e-5 or hazard_brake:
             return 0., True
-        elif target_speed < self.minimum_target_speed:  # Avoid very small target speeds
+        elif target_speed < self.minimum_target_speed: # Avoid very small target speeds
             target_speed = self.minimum_target_speed
 
         current_speed = current_speed * 3.6
@@ -212,7 +212,7 @@ class LongitudinalLinearRegressionController(LongitudinalController):
 
     def get_throttle_extrapolation(self, target_speed, current_speed):
         """
-        Get the throttle value for the given target speed and current speed, assuming no hazard brake condition. 
+        Get the throttle value for the given target speed and current speed, assuming no hazard brake condition.
         This method is used for forecasting.
 
         Args:
@@ -222,8 +222,8 @@ class LongitudinalLinearRegressionController(LongitudinalController):
         Returns:
             float: The throttle value.
         """
-        current_speed = current_speed * 3.6  # Convertion to km/h
-        target_speed = target_speed * 3.6  # Convertion to km/h
+        current_speed = current_speed * 3.6 # Convertion to km/h
+        target_speed = target_speed * 3.6 # Convertion to km/h
         params = self.params
         speed_error = target_speed - current_speed
 

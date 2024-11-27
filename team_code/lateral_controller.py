@@ -4,6 +4,7 @@ controller implementations.
 """
 
 import numpy as np
+from config import GlobalConfig
 
 class LateralController:
     """
@@ -92,7 +93,7 @@ class LateralPIDController(LateralController):
         else:
             lookahead_distance = self.lateral_pid_speed_scale * current_speed_kph + self.lateral_pid_speed_offset
             lookahead_distance = np.clip(lookahead_distance, self.lateral_pid_minimum_lookahead_distance,
-                                         self.lateral_pid_maximum_lookahead_distance)
+                                        self.lateral_pid_maximum_lookahead_distance)
 
         lookahead_distance = int(min(lookahead_distance, route_points.shape[0] - 1))
 

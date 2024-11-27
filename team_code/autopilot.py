@@ -23,7 +23,7 @@ from privileged_route_planner import PrivilegedRoutePlanner
 from config import GlobalConfig
 import transfuser_utils as t_u
 from scenario_logger import ScenarioLogger
-from longitudinal_controller import LongitudinalLinearRegressionController
+from longitudinal_controller import LongitudinalLinearRegressionController, LongitudinalPIDController
 from kinematic_bicycle_model import KinematicBicycleModel
 
 def get_entry_point():
@@ -76,6 +76,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         self.walker_close = False
         self.distance_to_walker = np.inf
         self.stop_sign_close = False
+        self.waiting_ticks_at_stop_sign = 0
 
         # To avoid failing the ActorBlockedTest, the agent has to move at least 0.1 m/s every 179 ticks
         self.ego_blocked_for_ticks = 0
@@ -351,7 +352,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
 
         # Get the current speed and target speed
         ego_speed = tick_data["speed"]
-        target_speed = speed_limit * self.config.ratio_target_speed_limit
+        target_speed = min(speed_limit * self.config.ratio_target_speed_limit, 72./3.6) # merge the two last speed bins
 
         # Reduce target speed if there is a junction ahead
         for i in range(min(self.config.max_lookahead_to_check_for_junction, len(route_wp))):
@@ -446,8 +447,8 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         """
         This method handles various obstacle and scenario situations that may arise during navigation.
         It adjusts the target speed, modifies the route, and determines if the ego vehicle should keep driving or wait.
-        The method supports different scenario types such as InvadingTurn, Accident, ConstructionObstacle, 
-        ParkedObstacle, AccidentTwoWays, ConstructionObstacleTwoWays, ParkedObstacleTwoWays, VehicleOpensDoorTwoWays, 
+        The method supports different scenario types such as InvadingTurn, Accident, ConstructionObstacle,
+        ParkedObstacle, AccidentTwoWays, ConstructionObstacleTwoWays, ParkedObstacleTwoWays, VehicleOpensDoorTwoWays,
         HazardAtSideLaneTwoWays, HazardAtSideLane, and YieldToEmergencyVehicle.
 
         Args:
@@ -637,7 +638,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
             CarlaDataProvider.active_scenarios = [CarlaDataProvider.active_scenarios[i] for i in indices]
 
         keep_driving = False
-        speed_reduced_by_obj = [target_speed, None, None, None]  # [target_speed, type, id, distance]
+        speed_reduced_by_obj = [target_speed, None, None, None] # [target_speed, type, id, distance]
 
         # Remove scenarios that ended with a scenario timeout
         active_scenarios = CarlaDataProvider.active_scenarios.copy()
@@ -1088,12 +1089,13 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         Returns:
             float: The computed target speed for the ego vehicle.
         """
+
         a = self.config.idm_maximum_acceleration # Maximum acceleration [m/s²]
         b = self.config.idm_comfortable_braking_deceleration_high_speed if ego_speed > \
                         self.config.idm_comfortable_braking_deceleration_threshold else \
                         self.config.idm_comfortable_braking_deceleration_low_speed # Comfortable deceleration [m/s²]
         delta = self.config.idm_acceleration_exponent # Acceleration exponent
-        
+
         t_bound = self.config.idm_t_bound
 
         def idm_equations(t, x):
@@ -1281,7 +1283,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
             ego_location (carla.Location): The current location of the ego vehicle.
             rear_vehicle_ids (list): A list of IDs for vehicles behind the ego vehicle.
             leading_vehicle_ids (list): A list of IDs for vehicles in front of the ego vehicle.
-            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type, object ID, distance] 
+            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type, object ID, distance]
                 for the object that caused the most speed reduction, or None if no speed reduction.
             plant (bool): Whether to use plant.
 
@@ -1326,10 +1328,10 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
                         bb = carla.BoundingBox(vehicle.get_location(), extent)
                         bb.rotation = carla.Rotation(pitch=0, yaw=vehicle.get_transform().rotation.yaw, roll=0)
                         self._world.debug.draw_box(box=bb,
-                                                   rotation=bb.rotation,
-                                                   thickness=0.5,
-                                                   color=self.config.leading_vehicle_color,
-                                                   life_time=self.config.draw_life_time)
+                                                  rotation=bb.rotation,
+                                                  thickness=0.5,
+                                                  color=self.config.leading_vehicle_color,
+                                                  life_time=self.config.draw_life_time)
                     elif vehicle_id in rear_vehicle_ids:
                         vehicle = self._world.get_actor(vehicle_id)
                         extent = vehicle.bounding_box.extent
@@ -1347,7 +1349,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
                                              near_lane_change, leading_vehicle_ids, rear_vehicle_ids,
                                              speed_reduced_by_obj, nearby_walkers, nearby_walkers_ids):
         """
-        Compute the target speeds for the ego vehicle considering all actors (vehicles, bicycles, 
+        Compute the target speeds for the ego vehicle considering all actors (vehicles, bicycles,
         and pedestrians) by checking for intersecting bounding boxes.
 
         Args:
@@ -1357,14 +1359,14 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
             near_lane_change (bool): Whether the ego vehicle is near a lane change maneuver.
             leading_vehicle_ids (list): A list of IDs for vehicles in front of the ego vehicle.
             rear_vehicle_ids (list): A list of IDs for vehicles behind the ego vehicle.
-            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type, 
-                object ID, distance] for the object that caused the most speed reduction, or None if 
+            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type,
+                object ID, distance] for the object that caused the most speed reduction, or None if
                 no speed reduction.
             nearby_walkers (dict): A list of predicted bounding boxes of nearby pedestrians.
             nearby_walkers_ids (list): A list of IDs for nearby pedestrians.
 
         Returns:
-            tuple: A tuple containing the target speeds for bicycles, pedestrians, vehicles, and the updated 
+            tuple: A tuple containing the target speeds for bicycles, pedestrians, vehicles, and the updated
                 speed_reduced_by_obj list.
         """
         target_speed_bicycle = initial_target_speed
@@ -1418,10 +1420,10 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
 
                         # Handle the case when the blocking actor is not a bicycle
                         else:
-                            self.vehicle_hazard = True  # Set the vehicle hazard flag
-                            self.vehicle_affecting_id = vehicle_id  # Store the ID of the vehicle causing the hazard
-                            color = hazard_color  # Change the following colors from green to red (no hazard to hazard)
-                            target_speed_vehicle = 0  # Set the target speed for vehicles to zero
+                            self.vehicle_hazard = True # Set the vehicle hazard flag
+                            self.vehicle_affecting_id = vehicle_id # Store the ID of the vehicle causing the hazard
+                            color = hazard_color # Change the following colors from green to red (no hazard to hazard)
+                            target_speed_vehicle = 0 # Set the target speed for vehicles to zero
                             distance_to_actor = blocking_actor.get_location().distance(ego_vehicle_location)
 
                             # Update the object causing the most speed reduction
@@ -1482,11 +1484,11 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
             vehicle_list (list): A list of vehicle actors in the simulation.
             actor_list (list): A list of all actors (vehicles, pedestrians, etc.) in the simulation.
             initial_target_speed (float): The initial target speed for the ego vehicle.
-            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type, object ID, distance] 
+            speed_reduced_by_obj (list or None): A list containing [reduced speed, object type, object ID, distance]
                     for the object that caused the most speed reduction, or None if no speed reduction.
 
         Returns:
-            tuple: A tuple containing the brake command (bool), target speed (float), and the updated 
+            tuple: A tuple containing the brake command (bool), target speed (float), and the updated
                     speed_reduced_by_obj list.
         """
         ego_speed = self._vehicle.get_velocity().length()
@@ -1666,7 +1668,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
 
     def forecast_walkers(self, actors, ego_vehicle_location, number_of_future_frames):
         """
-        Forecast the future locations of pedestrians in the vicinity of the ego vehicle assuming they 
+        Forecast the future locations of pedestrians in the vicinity of the ego vehicle assuming they
         keep their velocity and direction
 
         Args:
@@ -1715,8 +1717,8 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
                                       yaw=bb.rotation.yaw + transform.rotation.yaw,
                                       roll=bb.rotation.roll + transform.rotation.roll)
             extent = bb.extent
-            extent.x = max(self.config.pedestrian_minimum_extent, extent.x)  # Ensure a minimum width
-            extent.y = max(self.config.pedestrian_minimum_extent, extent.y)  # Ensure a minimum length
+            extent.x = max(self.config.pedestrian_minimum_extent, extent.x) # Ensure a minimum width
+            extent.y = max(self.config.pedestrian_minimum_extent, extent.y) # Ensure a minimum length
 
             pedestrian_future_bboxes = []
             for j in range(number_of_future_frames):
@@ -1742,7 +1744,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
 
         return nearby_pedestrians_bbs, nearby_pedestrian_ids
 
-    def ego_agent_affected_by_red_light(self, ego_vehicle_location, ego_vehicle_speed, distance_to_traffic_light, 
+    def ego_agent_affected_by_red_light(self, ego_vehicle_location, ego_vehicle_speed, distance_to_traffic_light,
                                         next_traffic_light, route_points, target_speed):
         """
         Handles the behavior of the ego vehicle when approaching a traffic light.
@@ -1824,7 +1826,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
 
         return target_speed
 
-    def ego_agent_affected_by_stop_sign(self, ego_vehicle_location, ego_vehicle_speed, next_stop_sign, target_speed, 
+    def ego_agent_affected_by_stop_sign(self, ego_vehicle_location, ego_vehicle_speed, next_stop_sign, target_speed,
                                         actor_list):
         """
         Handles the behavior of the ego vehicle when approaching a stop sign.
@@ -1844,7 +1846,6 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         
         for stop_sign in stop_signs:
             center_bb_stop_sign = stop_sign.get_transform().transform(stop_sign.trigger_volume.location)
-            wp = self.world_map.get_waypoint(center_bb_stop_sign)
             stop_sign_extent = carla.Vector3D(1.5, 1.5, 0.5)
             bounding_box_stop_sign = carla.BoundingBox(center_bb_stop_sign, stop_sign_extent)
             rotation_stop_sign = stop_sign.get_transform().rotation
@@ -1858,10 +1859,10 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
             if self.visualize:
                 color = carla.Color(0, 1, 0) if affects_ego else carla.Color(1, 0, 0)
                 self._world.debug.draw_box(box=bounding_box_stop_sign,
-                                                                     rotation=bounding_box_stop_sign.rotation,
-                                                                     thickness=0.1,
-                                                                     color=color,
-                                                                     life_time=(1.0 / self.config.carla_fps)+1e-6)
+                                           rotation=bounding_box_stop_sign.rotation,
+                                           thickness=0.1,
+                                           color=color,
+                                           life_time=(1.0 / self.config.carla_fps)+1e-6)
 
         if next_stop_sign is None:
             # No stop sign, continue with the current target speed
@@ -1874,26 +1875,66 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         # Reset the stop sign flag if we are farther than 10m away
         if distance_to_stop_sign > self.config.unclearing_distance_to_stop_sign:
             self.cleared_stop_sign = False
+            self.waiting_ticks_at_stop_sign = 0
         else:
             # Set the stop sign flag if we are closer than 3m and speed is low enough
             if ego_vehicle_speed < 0.1 and distance_to_stop_sign < self.config.clearing_distance_to_stop_sign:
-                self.cleared_stop_sign = True
+                self.waiting_ticks_at_stop_sign += 1
+                if self.waiting_ticks_at_stop_sign > 25:
+                    self.cleared_stop_sign = True
+            else:
+                self.waiting_ticks_at_stop_sign = 0
 
         # Set the distance to stop sign as infinity if the stop sign has been cleared
         distance_to_stop_sign = np.inf if self.cleared_stop_sign else distance_to_stop_sign
 
         # Compute the target speed using the IDM
-        target_speed = self._compute_target_speed_idm(
-            desired_speed=target_speed,
-            leading_actor_length=0,  #self._vehicle.bounding_box.extent.x,
-            ego_speed=ego_vehicle_speed,
-            leading_actor_speed=0.,
-            distance_to_leading_actor=distance_to_stop_sign,
-            s0=self.config.idm_stop_sign_minimum_distance,
-            T=self.config.idm_stop_sign_desired_time_headway)
+        target_speed = self._compute_target_speed_idm(desired_speed=target_speed,
+                                                        leading_actor_length=0,
+                                                        ego_speed=ego_vehicle_speed,
+                                                        leading_actor_speed=0.,
+                                                        distance_to_leading_actor=distance_to_stop_sign,
+                                                        s0=self.config.idm_stop_sign_minimum_distance,
+                                                        T=self.config.idm_stop_sign_desired_time_headway)
 
         # Return whether the ego vehicle is affected by the stop sign and the adjusted target speed
         return target_speed
+
+    def _get_forward_speed(self, transform=None, velocity=None):
+        """
+        Calculate the forward speed of the vehicle based on its transform and velocity.
+
+        Args:
+            transform (carla.Transform, optional): The transform of the vehicle. If not provided, it will be obtained from the vehicle.
+            velocity (carla.Vector3D, optional): The velocity of the vehicle. If not provided, it will be obtained from the vehicle.
+
+        Returns:
+            float: The forward speed of the vehicle in m/s.
+        """
+        if not velocity:
+            velocity = self._vehicle.get_velocity()
+
+        if not transform:
+            transform = self._vehicle.get_transform()
+
+        # Convert the velocity vector to a NumPy array
+        velocity_np = np.array([velocity.x, velocity.y, velocity.z])
+
+        # Convert rotation angles from degrees to radians
+        pitch_rad = np.deg2rad(transform.rotation.pitch)
+        yaw_rad = np.deg2rad(transform.rotation.yaw)
+
+        # Calculate the orientation vector based on pitch and yaw angles
+        orientation_vector = np.array([
+            np.cos(pitch_rad) * np.cos(yaw_rad), 
+            np.cos(pitch_rad) * np.sin(yaw_rad), 
+            np.sin(pitch_rad)
+        ])
+
+        # Calculate the forward speed by taking the dot product of velocity and orientation vectors
+        forward_speed = np.dot(velocity_np, orientation_vector)
+
+        return forward_speed
 
     def _dot_product(self, vector1, vector2):
         """

@@ -90,10 +90,16 @@ class PrivilegedRoutePlanner(object):
         self.route_index += np.argmin(np.linalg.norm(agent_position[None, :2] - \
                                                     self.route_points[self.route_index:search_range, :2], axis=1))
 
-        return (self.route_points[self.route_index:], self.route_waypoints[self.route_index:],
-                self.commands[self.route_index:], self.distances_to_next_traffic_lights[self.route_index],
-                self.next_traffic_lights[self.route_index], self.distances_to_next_stop_signs[self.route_index],
-                self.next_stop_signs[self.route_index], self.speed_limits[self.route_index])
+        return (
+            self.route_points[self.route_index:],
+            self.route_waypoints[self.route_index:],
+            self.commands[self.route_index:],
+            self.distances_to_next_traffic_lights[self.route_index],
+            self.next_traffic_lights[self.route_index],
+            self.distances_to_next_stop_signs[self.route_index],
+            self.next_stop_signs[self.route_index],
+            self.speed_limits[self.route_index]
+            )
 
     def extend_lane_shift_transition_for_yield_to_emergency_vehicle(self, shift_to_left_lane, previous_shift_end_index):
         """
@@ -212,11 +218,11 @@ class PrivilegedRoutePlanner(object):
             end_index (int): The index of the route waypoint where the shift should end.
             shift_to_left_lane (bool): Whether to shift the route to the left lane.
             transition_length (int): The length of the transition in waypoints.
-            lane_transition_factor (float): A factor between 0 and 1 that controls the amount of shift towards 
+            lane_transition_factor (float): A factor between 0 and 1 that controls the amount of shift towards
                                                 the neighboring lane.
-                                            A value of 1.0 means the route will be shifted to the center of 
+                                            A value of 1.0 means the route will be shifted to the center of
                                                 the neighboring lane,
-                                            while a value of 0.0 means the route will stay in the center of 
+                                            while a value of 0.0 means the route will stay in the center of
                                                 the current lane.
         """
         for idx in range(start_index, end_index):
@@ -335,11 +341,11 @@ class PrivilegedRoutePlanner(object):
             obstacle_direction (str): The direction in which the obstacle is located. If it is to the left, we shift
                         the route to the right and vice versa.
             transition_length (int): The length of the transition in waypoints.
-            lane_transition_factor (float): A factor between 0 and 1 that controls the amount of shift 
+            lane_transition_factor (float): A factor between 0 and 1 that controls the amount of shift
                                                 towards the neighboring lane.
-                                            A value of 1.0 means the route will be shifted to the center of 
+                                            A value of 1.0 means the route will be shifted to the center of
                                                 the neighboring lane,
-                                            while a value of 0.0 means the route will stay in the center of 
+                                            while a value of 0.0 means the route will stay in the center of
                                                 the current lane.
             extra_length_before (float): Additional length (in meters) to be added before the first actor for the shift.
             extra_length_after (float): Additional length (in meters) to be added after the last actor for the shift.
@@ -402,9 +408,9 @@ class PrivilegedRoutePlanner(object):
         cmds = [cmd for _, cmd in global_plan]
 
         # Handle the case where the route starts with a parking exit scenario
-        # In this case the firstt wp is on the center of the road, not the parking lot,
+        # In this case the first wp is on the center of the road, not the parking lot,
         # where the agent starts
-        if starts_with_parking_exit:  # workaraound for ParkingExit scenario
+        if starts_with_parking_exit: # workaraound for ParkingExit scenario
             self.route_index = 0
             self.last_route_index = 0
 
@@ -482,10 +488,10 @@ class PrivilegedRoutePlanner(object):
             tuple: A tuple containing the smoothed and supersampled route points, and the updated commands.
         """
 
-        num_supersample_per_point = 10  # sample x points per number of route points for later
+        num_supersample_per_point = 10 # sample x points per number of route points for later
         # number of points to interpolate betweeneach pair of original points
-        num_samples = self.points_per_meter * num_supersample_per_point
-        segment_length = 1. / self.points_per_meter  # Length of segments along the smoothed route
+        num_samples = self.points_per_meter * num_supersample_per_point # number of points to interpolate between each pair of original points
+        segment_length = 1. / self.points_per_meter # Length of segments along the smoothed route
         num_original_points = original_route_points.shape[0]
 
         # Create interpolation functions for each dimension
@@ -758,9 +764,9 @@ class PrivilegedRoutePlanner(object):
 
         # Iterate through route locations
         for i, loc in enumerate(self.route_points):
-            if i % self.speed_limit_waypoints_spacing_check == 0:  # Calculate for waypoints every 5 m for efficiency
+            if i % self.speed_limit_waypoints_spacing_check == 0: # Calculate for waypoints every 5 m for efficiency
                 _, min_idx = tree.query(loc, k=1)
-                speed_limit = map_speed_limits[min_idx] / 3.6  # Convert speed from km/h to m/s
+                speed_limit = map_speed_limits[min_idx] / 3.6 # Convert speed from km/h to m/s
                 self.speed_limits[i] = speed_limit
                 previous_speed_limit = speed_limit
             else:

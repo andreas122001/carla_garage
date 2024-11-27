@@ -141,7 +141,7 @@ class GlobalConfig:
         # IDM minimum distance for pedestrians
         self.idm_pedestrian_minimum_distance = 4.
         # IDM desrired time headway for pedestrians
-        self.idm_pedestrian_desired_time_headway = 0.25
+        self.idm_pedestrian_desired_time_headway = 0.1
         # IDM minimum distance for bicycles
         self.idm_bicycle_minimum_distance = 4.
         # IDM desrired time headway for bicycles
