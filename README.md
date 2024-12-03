@@ -32,7 +32,7 @@ Clone the repository, set up CARLA Leaderboard 2.0, and create the conda environ
 
 ```Shell
 git clone git@github.com:autonomousvision/carla_garage.git
-cd PDM-Lite
+cd carla_garage
 chmod +x setup_pdm_lite.sh
 ./setup_pdm_lite.sh
 conda env create -f environment.yml
@@ -41,7 +41,7 @@ conda activate pdm_lite
 Before running the code, you need to add the following paths to your system's `PYTHONPATH` environment variable:
 
 ```Shell
-export CARLA_ROOT=/path/to/CARLA/root
+export CARLA_ROOT=/path/to/carla_garage
 export WORK_DIR=/path/to/pdm_lite
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
