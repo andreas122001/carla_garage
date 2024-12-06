@@ -6,7 +6,7 @@
 </p>
 
 <p align="center" style="font-size:40px;">
-<b> A starter kit for the CARLA leaderboard 2.0 </b>
+<b> A starter kit for the <a href="https://leaderboard.carla.org/">CARLA leaderboard 2.0</a> </b>
 </p>
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/hidden-biases-of-end-to-end-driving-models/carla-leaderboard-2-0-on-carla)](https://paperswithcode.com/sota/carla-leaderboard-2-0-on-carla?p=hidden-biases-of-end-to-end-driving-models)
@@ -15,7 +15,7 @@
 
 <p align="center" style="font-size:20px;">
 This repository contains the first complete starter kit for the CARLA leaderboard 2.0 where all components are open-source including the dataset, expert driver, evaluation and training code.
-We additionally provide pre-trained model weights for TransFuser++ which is the best open-source model at the time of publication. The paper <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> Hidden Biases of End-to-End Driving Models </a> described the method and the <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> LB2 Technical Report</a>, the changes we made to adapt TransFuser++ to the CARLA leaderboard 2.0. <br/>
+We additionally provide pre-trained model weights for TransFuser++ which is the best open-source model at the time of publication. The paper <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> Hidden Biases of End-to-End Driving Models </a> describes the method and the <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> LB2 Technical Report</a> discusses the changes we made to adapt TransFuser++ to the CARLA leaderboard 2.0. <br/><br/>
 The leaderboard 1.0 code can be found on the <a href="https://github.com/autonomousvision/carla_garage/tree/leaderboard_1"> leaderboard_1</a> branch.
 </p>
 
@@ -23,13 +23,13 @@ The leaderboard 1.0 code can be found on the <a href="https://github.com/autonom
 
 1. [Setup](#setup)
 2. [Pre-Trained Models](#pre-trained-models)
-3. [Local evaluation / Debugging](#Local-evaluation-/-Debugging)
-4. [Benchmarking](#Benchmarking)
+3. [Local Evaluation and Debugging](#local-evaluation-and-debugging)
+4. [Benchmarking](#benchmarking)
 5. [Dataset](#dataset)
-6. [Data generation](#data-generation)
+6. [Data Generation](#data-generation)
 7. [Training](#training)
-8. [Additional Documenation](#additional-documentation)
-9. [Citation](#citation)
+8. [Additional Documentation](#additional-documentation)
+9. [Citations](#citations)
 
 ## Setup
 
@@ -61,21 +61,21 @@ We provide a set of [pretrained models](https://s3.eu-central-1.amazonaws.com/av
 The models are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0).
 
 These are not the exact model weights we used in the CVPR CARLA 2024 challenge but re-trained models with similar performance.
-We currently provide 1 set of models with 3 different training seeds trained on all towns (except 11 and 15) for the Bench2Drive and CARLA leaderboard 2.0 test routes benchmark.
-We will add models for the validation routes at a later point.
+We currently provide 1 set of models with 3 different training seeds trained on all towns (i.e., including Town13) for the Bench2Drive and CARLA leaderboard 2.0 test routes benchmarks.
+We will add models for the validation benchmark at a later point.
 
 Each folder has an `args.txt` containing the training hyperparameters, a `config.json` containing all hyperparameters which will automatically be loaded and `model_0030_0.pth` files containing the model weights. The last number in the model file indicates the seed/training repetition.
 
-## Local evaluation / Debugging
+## Local Evaluation and Debugging
 
 To evaluate a model, you need to start a CARLA server:
 ```Shell
 cd /path/to/CARLA/root
 ./CarlaUE4.sh
 ```
-Afterward, run [leaderboard_evaluator_local.py](leaderboard/leaderboard/leaderboard_evaluator_local.py) as the main python file.
+Afterwards, run [leaderboard_evaluator_local.py](leaderboard/leaderboard/leaderboard_evaluator_local.py) as the main python file.
 
-The leaderboard in the leaderboard folder is the original leaderboard (with some minor changes like extra seeding options and upgrade to python 3.10). The leaderboard_autopilot is a modified version of the leaderboard that stores extra information that helps the privileged expert driver solve the scenarios. It is used for data collection.
+The leaderboard in the leaderboard folder is the original leaderboard (with some minor changes like extra seeding options and an upgrade to python 3.10). The leaderboard_autopilot is a modified version of the leaderboard that stores extra information which helps the privileged expert driver solve the scenarios. It is used for data collection.
 The leaderboard in the Bench2Drive folder is a modified version of the leaderboard which was adapted by the Bench2Drive team for short evaluation routes.
 
 Set the `--agent-config` option to a folder containing a `config.json` and one or more `model_0030.pth` files. If multiple models are present in the folder, their predictions will be combined to an ensemble. <br>
@@ -92,35 +92,35 @@ The code has the optional feature to generate visualizations. To turn it on, set
 
 ### Bench2Drive
 Bench2Drive is a CARLA benchmark proposed by the paper [Bench2Drive: Towards Multi-Ability Benchmarking of Closed-Loop End-To-End Autonomous Driving](https://arxiv.org/abs/2406.03877). It consists of 220 very short (~150m) routes split across all towns with 1 safety critical scenario in each route.
-Since it uses all towns for training, the methods have been seen the towns during training, so it can be considered a training benchmark (reminiscent of level 4 driving).
+Since it uses all towns for training, the methods have seen the test towns during training, so it can be considered a 'training' benchmark (reminiscent of level 4 driving).
 The benchmark also comes with a training dataset generated by the [Think2Drive](https://arxiv.org/abs/2402.16720) expert, but we don't use it here since we observe that TransFuser++ trained with data from the [PDM-Lite](https://arxiv.org/abs/2312.14150) expert achieves much better results than all the other methods trained with Think2Drive (see picture below).
-The benchmark and additional instruction can be found at in the [Bench2Drive](Bench2Drive) folder.
+The benchmark and additional instructions can be found in the [Bench2Drive](Bench2Drive) folder.
 It is run by executing the bash script [run_evaluation_tf++.sh](Bench2Drive/leaderboard/scripts/run_evaluation_tf++.sh). You need to adjust the script with your paths and number of GPUs (by default, the script assumes 8 GPUs are available on the node.) To give a rough estimate, it takes around ~4 hours to evaluate TF++ on Bench2Drive with 8x2080ti. For more details on how to aggregate the results, see the [README](Bench2Drive/README.md).
 
-![Bench2Drive](assets/Bench2Drive.png)
+<img src="assets/Bench2Drive.png" alt="Bench2Drive" width="400"/>
 
 The Bench2Drive folder is a copy of version 0.0.3 of the [Bench2Drive repository](https://github.com/Thinklab-SJTU/Bench2Drive). Please cite the [Bench2Drive paper](https://arxiv.org/abs/2406.03877) when using the benchmark.
 
 ### CARLA leaderboard 2.0 validation routes
 The [CARLA leaderboard 2.0 validation routes](leaderboard/data/routes_validation.xml) is a set of 20 long (~12 km) routes in Town 13. While driving along the routes, the agent has to solve around 90 safety critical scenarios per route consisting of [21 different types](https://leaderboard.carla.org/scenarios/) (38 counting variations).
-As its name suggests, this is a validation benchmark, so data from Town 13 may not be used during training (reminiscent of level 5 driving).
+As its name suggests, this is a 'validation' benchmark, so data from Town 13 may not be used during training (reminiscent of level 5 driving).
 To train a model for this benchmark, use the training command line option `--setting 13_withheld`.
 We recommend running 3 seed repetitions of the 20 routes with different seeds to reduce the impact of evaluation variance (which is quite high).
 
 Due to the length of the routes as well as the large number of scenarios per route, the scores on this benchmark are much lower than on Bench2Drive and other benchmarks.
 The CARLA leaderboard 2.0 validation routes are probably the most challenging public autonomous driving benchmark at the time of writing (Dec. 2024), so they are ideal for showcasing improvements over the state-of-the-art method(s).
 
-Evaluation is best done by evaluating the 20*3 routes in parallel. We use a SLURM cluster with 2080ti GPUs for this. We provide our [evaluation script](evaluate_routes_slurm_tfpp.py) for this. It parallelizes the 60 routes across 60 jobs and monitors if any jobs crashed, restarting them as needed. You need to set your paths with the console arguments. The script is started via `sbatch run_evaluation_slurm_tfpp.sh` which starts the evaluation for every training seed/repetition you have (change as needed). Make sure your conda environment is active. For other types of clusters, you need to adapt the script accordingly. To give you a rough idea, with 14 GPUs, evaluation is typically done within a day. The [max_num_jobs.txt](max_num_jobs.txt) file specifies the maximum number of jobs the script will spawn and can be edited while running the evaluation. Keep it low initially and in crease the number once your setup works.
+Evaluation is best done by evaluating the 20*3 routes in parallel. We use a SLURM cluster with 2080ti GPUs for this. We provide our [evaluation script](evaluate_routes_slurm_tfpp.py) for this. It parallelizes the 60 routes across 60 jobs and monitors if any jobs crashed, restarting them as needed. You need to set your paths with the console arguments. The script is started via `sbatch run_evaluation_slurm_tfpp.sh` which starts the evaluation for every training seed/repetition you have (change as needed). Make sure your conda environment is active. For other types of clusters, you need to adapt the script accordingly. To give you a rough idea, with 14 GPUs, evaluation is typically done within a day. The [max_num_jobs.txt](max_num_jobs.txt) file specifies the maximum number of jobs the script will spawn and can be edited while running the evaluation. Keep it low initially and increase the number once your setup works.
 
-The benchmark revealed a flaw in the common Driving Score metric, which at long routes and lower scores (that sota is currently at) can assign a lower driving score to a better method. To fix this problem, we propose the Normalized Driving Score metric, which does not have this issue but otherwise is similar in difficulty. For an in depth discussion of the problem and solution, please read [Zimmerlin 2024, Chapter 6](https://kashyap7x.github.io/assets/pdf/students/Zimmerlin2024.pdf).
+The benchmark revealed a flaw in the common Driving Score metric, which for long routes and lower scores (that SOTA is currently at) can assign a lower driving score to a better method. To fix this problem, we propose the Normalized Driving Score metric, which does not have this issue but otherwise is similar in difficulty. For an in depth discussion of the problem and solution, please read [Zimmerlin 2024, Chapter 6](https://kashyap7x.github.io/assets/pdf/students/Zimmerlin2024.pdf).
 
-The normalized driving score as well as other analysis can be computed by running the following python script, which will aggregate all given result files (in case the evaluation was distributed across GPUs) and compute the additional metrics.
+The normalized driving score and other metrics for a detailed analysis can be computed by running the following python script, which will aggregate all given result files (in case the evaluation was distributed across GPUs) and compute the additional metrics.
 ```Shell
 python ${WORK_DIR}/tools/result_parser.py --xml ${WORK_DIR}/leaderboard/data/routes_validation.xml --results /path/to/folder/containing_json_files
 ```
 
 ### CARLA leaderboard 2.0 test routes
-The CARLA leaderboard test routes are similar than the validation routes, with the difference being that the test town 14 was not publicly released, and the evaluation is done by a third party ensuring fair results.
+The CARLA leaderboard test routes are similar to the validation routes, with the difference being that the test town 14 was not publicly released, and the evaluation is done by a third party ensuring fair results.
 It works by creating a docker container with your model and code and uploading it to a third party evaluation server.
 Instructions for submitting your model to the test server can be found on the [CARLA leaderboard website](https://leaderboard.carla.org/submit/) as well as [eval.ai](https://eval.ai/web/challenges/challenge-page/2098/overview), where you can view your results.
 The CARLA leaderboard test routes are frequently used for competitions at workshops of top tier conferences.
@@ -133,16 +133,16 @@ By the terms of the competition, it is not allowed to evaluate privileged method
 
 To submit to the CARLA leaderboard, you need docker installed on your system (as well as the nvidia-container-toolkit to test it). To generate and test the dockerfile we provide the scripts [make_docker.sh](tools/make_docker.sh) and [run_docker.sh](tools/run_docker.sh). You need to change the paths to fit your system and edit variables in [Dockerfile.master](tools/Dockerfile.master).
 
-Note that the CARLA leaderboard 2.0 test routes should not be confused with the devtest routes, which are a set of 2 routes for development testing aka debugging. The devtest routes are in the training town, miss many scenarios and lack diversity, so they are not suitable for benchmarking methods.
+Note that the CARLA leaderboard 2.0 test routes should not be confused with the devtest routes, which are a set of 2 routes for development testing aka debugging. The devtest routes are in the training town, miss many scenarios and lack diversity, so they are not suitable for benchmarking.
 
 ### Longest6 v2
 [Longest6](https://www.cvlibs.net/publications/Chitta2022PAMI.pdf) is a benchmark consisting of 36 medium length routes (~1-2 km) from leaderboard 1.0 in towns 1-6. We have adapted the benchmark to the new CARLA version 0.9.15 and leaderboard/scenario runner code. The benchmark features the 7 scenario types from leaderboard 1.0 (but implemented with the leaderboard 2.0 logic). The scenario descriptions were created by converting the leaderboard 1.0 scenarios with the [CARLA route bridge](tools/route_bridge.py) converter. It can serve as a benchmark with intermediate difficulty.
-Note that the numbers of Longest6 v2 are not directly comparable to the leaderboard 1.0 longest6 numbers.
+Note that the results of models on Longest6 v2 are not directly comparable to the leaderboard 1.0 longest6 numbers.
 The benchmark can be found [here](leaderboard/data/longest6.xml) and the individual route files [here](leaderboard/data/longest6_split). Unlike the leaderboard 1.0 version, there are no modifications to the CARLA leaderboard code. Longest6 is a training benchmark, so training on Town 01-06 is allowed.
 
 ## Dataset
 We released the dataset we used to train the released model.
-Note that the v1 dataset was generated with a slightly older version of PDM-Lite than we have in the repository.
+Note that this dataset was generated with a slightly older version of PDM-Lite than we have in the repository.
 The dataset is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0).
 You can download it via.
 ```Shell
@@ -171,7 +171,7 @@ The dataset provided in this repository is not perfect. At some point while impr
 
  ## Training
 
-Agents are trained via the file [train.py](team_code/train.py). Examples how to use it are provided for [shell](team_code/shell_train.sh) and [SLURM](team_code/slurm_train.sh). You need to activate garage conda environment before running it. It first sets the relevant environment variables and then launches the training with torchrun. Torchrun is a pytorch tool that handles multi-gpu training. If you want to debug on a single gpu simply set --nproc_per_node=1. The training script has many options to configure your training, you can list them with python train.py --help or look through the code. The most important once are:
+Agents are trained via the file [train.py](team_code/train.py). Examples of how to use it are provided for [shell](team_code/shell_train.sh) and [SLURM](team_code/slurm_train.sh). You need to activate the garage conda environment before running it. It first sets the relevant environment variables and then launches the training with torchrun. Torchrun is a pytorch tool that handles multi-gpu training. If you want to debug on a single gpu simply set --nproc_per_node=1. The training script has many options to configure your training, you can list them with python train.py --help or look through the code. The most important ones are:
 
 ```Shell
 --id your_model_000 # Name of your experiment
@@ -192,10 +192,10 @@ After training the model, run the script a second time for stage 2 with:
 --continue_epoch 0
 --load_file /path/to/model/from/stage1/model_030.pth
 ```
-The load_file option is usually used to resume a crashed training, but with --continue_epoch 0 the training will start from scratch with the pre-trained weights used for initialization.
+The load_file option is usually used to resume a crashed training run, but with --continue_epoch 0 the training will start from scratch with the pre-trained weights used for initialization.
 
-Training takes roughly 2x3 days on 4 A100 (40GB) GPUs.
-If you are compute constraint, we recommend to use only 1 stage training, and use a smaller backbone (with larger batch size). This will reduce training cost, but may result in lower performance.
+Training takes roughly 3 days per stage on 4 A100 (40GB) GPUs.
+If you are compute constrained, we recommend using only 1 stage of training, and using a smaller backbone (with a larger batch size). This will reduce the training cost, but may result in lower performance.
 ```Shell
 --image_architecture resnet34
 --lidar_architecture resnet34
@@ -222,9 +222,9 @@ Environment variable can be set in `Environment Variables:`.
 
 - Building a full autonomous driving stack involves quite some [**engineering**](docs/engineering.md). The documentation explains some of the techniques and design philosophies we used in this project.
 
-- The codebase can run any experiment presented in the paper. It also supports some additional features that we did not end up using. They are documented [here](docs/additional_features.md).
+- The leaderboard_1 branch can run any experiment presented in the ICCV paper. It also supports some additional features that we did not end up using. They are documented [here](docs/additional_features.md).
 
-## Citation
+## Citations
 If you find CARLA garage useful, please consider giving us a star &#127775;.
 Please cite the following papers for the respective components of the repo:
 
@@ -285,14 +285,14 @@ Particularly, we would like to thank the following repositories for their contri
 * [leaderboard](https://github.com/carla-simulator/leaderboard)
 * [simple_bev](https://github.com/aharley/simple_bev)
 * [transfuser](https://github.com/autonomousvision/transfuser)
-* [interfuser](https://github.com/opendilab/InterFuser)
-* [driveLM](https://github.com/OpenDriveLab/DriveLM)
+* [InterFuser](https://github.com/opendilab/InterFuser)
+* [DriveLM](https://github.com/OpenDriveLab/DriveLM)
 * [roach](https://github.com/zhejz/carla-roach/)
 * [plant](https://github.com/autonomousvision/plant)
 * [king](https://github.com/autonomousvision/king)
-* [wor](https://github.com/dotchen/WorldOnRails)
-* [tcp](https://github.com/OpenDriveLab/TCP)
-* [lbc](https://github.com/dotchen/LearningByCheating)
+* [WorldOnRails](https://github.com/dotchen/WorldOnRails)
+* [TCP](https://github.com/OpenDriveLab/TCP)
+* [LearningByCheating](https://github.com/dotchen/LearningByCheating)
 
 We also thank the creators of the numerous pip libraries we use. Complex projects like this would not be feasible without your contribution.
 
