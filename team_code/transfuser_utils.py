@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch import nn
 import cv2
 from collections import deque
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 import shapely
 import itertools
 from copy import deepcopy
@@ -408,7 +408,7 @@ def bb_image_to_vehicle_system(box, pixels_per_meter, min_x, min_y):
 
 def non_maximum_suppression(bounding_boxes, iou_treshhold):
   filtered_boxes = []
-  bounding_boxes = np.array(list(itertools.chain.from_iterable(bounding_boxes)), dtype=np.object)
+  bounding_boxes = np.array(list(itertools.chain.from_iterable(bounding_boxes)), dtype=object)
 
   if bounding_boxes.size == 0:  #If no bounding boxes are detected can't do NMS
     return filtered_boxes
@@ -580,7 +580,6 @@ def convert_depth(data):
   """
   Computes the normalized depth from a CARLA depth map.
   """
-  #data = np.transpose(data, (1, 2, 0))
   data = data.astype(np.float32)
 
   normalized = np.dot(data, [65536.0, 256.0, 1.0])
@@ -607,8 +606,8 @@ def create_projection_grid(config):
   """
   meters_per_pixel = 1.0 / config.pixels_per_meter
   # + half a pixel because we want the center of the voxel.
-  widths = torch.arange(config.min_x, config.max_x, meters_per_pixel) + (meters_per_pixel * 0.5)
-  depths = torch.arange(config.min_y, config.max_y, meters_per_pixel) + (meters_per_pixel * 0.5)
+  depths = torch.arange(config.min_x, config.max_x, meters_per_pixel) + (meters_per_pixel * 0.5)
+  widths = torch.arange(config.min_y, config.max_y, meters_per_pixel) + (meters_per_pixel * 0.5)
   meters_per_pixel_height = meters_per_pixel * config.bev_grid_height_downsample_factor
   heights = torch.arange(config.min_z_projection, config.max_z_projection,
                          meters_per_pixel_height) + (meters_per_pixel_height * 0.5)
@@ -709,23 +708,24 @@ def draw_probability_boxes(img, speed_prob, target_speeds, color=(128, 128, 128)
   colors = [color for _ in range(len(speed_prob))]
   colors[speed_index] = color_selected
   start_x = 0
-  start_y = 719  # 1024-155-150  # start_x and start_y specify position of upper left corner of box
+  start_y = img.shape[0] - 155 - 150  # 1024-155-150  # start_x and start_y specify position of upper left corner of box
   width_bar = 20 * 4
   width_space = 10
   cv2.rectangle(img, (start_x, start_y), (1024, start_y + 155), (255, 255, 255), cv2.FILLED)
 
   for idx, s in enumerate(speed_prob):
     start = start_x + idx * (width_space + width_bar)
-    cv2.rectangle(img, (start, start_y + 130), (start + width_bar, start_y + 130 - int(s * 100)), colors[idx], cv2.FILLED)
-    cv2.putText(img, f'{s:.2f}', (int(start + 0.33 * width_bar), start_y + 127 - int(s * 100)), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                (0, 0, 0), 1, cv2.LINE_AA)
+    cv2.rectangle(img, (start, start_y + 130), (start + width_bar, start_y + 130 - int(s * 100)), colors[idx],
+                  cv2.FILLED)
+    cv2.putText(img, f'{s:.2f}', (int(start + 0.33 * width_bar), start_y + 127 - int(s * 100)),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1, cv2.LINE_AA)
 
     # 3.6 is conversion from m/s to km/h
     cv2.putText(img, f'{int(round(target_speeds[idx] * 3.6)):02d}', (int(start + 0.33 * width_bar), start_y + 150),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1, cv2.LINE_AA)
 
-  cv2.putText(img, 'km/h', (start + width_bar + width_space, start_y + 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1,
-              cv2.LINE_AA)
+  cv2.putText(img, 'km/h', (start + width_bar + width_space, start_y + 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
+              1, cv2.LINE_AA)
 
 
 def plant_quant_to_box(config, pred_bounding_boxes):
@@ -806,18 +806,18 @@ def circle_line_segment_intersection(circle_center, circle_radius, pt1, pt2, ful
       return intersections
 
 
-def crop_array(config, images_i):   # images_i must have dimensions (H,W,C) or (H,W)
-    """
-    Crop rgb images to the desired height and width
-    """
-    if config.crop_image:
-      # crops rgb/depth/semantics from the bottom to cropped_height and symetrically from both sides to cropped_width
-      assert config.cropped_height <= images_i.shape[0]
-      assert config.cropped_width <= images_i.shape[1]
-      side_crop_amount = (images_i.shape[1] - config.cropped_width) // 2
-      if len(images_i.shape) > 2: # for rgb, we have 3 channels
-        return images_i[0:config.cropped_height, side_crop_amount:images_i.shape[1]-side_crop_amount, :]
-      else:  # for depth and semantics, there is no channel dimension
-        return images_i[0:config.cropped_height, side_crop_amount:images_i.shape[1]-side_crop_amount]
-    else: 
-      return images_i
+def crop_array(config, images_i):  # images_i must have dimensions (H,W,C) or (H,W)
+  """
+  Crop rgb images to the desired height and width
+  """
+  if config.crop_image:
+    # crops rgb/depth/semantics from the bottom to cropped_height and symetrically from both sides to cropped_width
+    assert config.cropped_height <= images_i.shape[0]
+    assert config.cropped_width <= images_i.shape[1]
+    side_crop_amount = (images_i.shape[1] - config.cropped_width) // 2
+    if len(images_i.shape) > 2:  # for rgb, we have 3 channels
+      return images_i[0:config.cropped_height, side_crop_amount:images_i.shape[1] - side_crop_amount, :]
+    else:  # for depth and semantics, there is no channel dimension
+      return images_i[0:config.cropped_height, side_crop_amount:images_i.shape[1] - side_crop_amount]
+  else:
+    return images_i

@@ -109,11 +109,6 @@ class InvadingTurn(BasicScenario):
 
         self._create_obstacle()
 
-        # add actors, that are relevant for the Expert to the list active_scenarios
-        first_cone = self.other_actors[-1]
-        last_cone = self.other_actors[0]
-        CarlaDataProvider.active_scenarios.append((type(self).__name__, [first_cone, last_cone, self._true_offset])) # added
-
     def _create_obstacle(self):
 
         next_wp = self._source_wp.next(10)[0]

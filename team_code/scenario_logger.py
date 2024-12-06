@@ -10,7 +10,7 @@ import numpy as np
 from rdp import rdp
 
 
-class ScenarioLogger():
+class ScenarioLogger:
   """
   Creates log files during evaluation with which we can visualize failures
   """

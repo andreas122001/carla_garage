@@ -160,9 +160,23 @@ def main():
     argparser.add_argument('-f', '--file', required=True, nargs="+", help='File at which to place the scenarios')
     args = argparser.parse_args()
 
+
+    file_path = args.file[0]
+    route_id = args.file[1] if len(args.file) > 1 else 0
+    
     # Get the client
     client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
+    client.set_timeout(30.0)
+    
+    # Load world
+    tree = etree.parse(args.file[0])
+    root = tree.getroot()
+    for route in root.iter("route"):
+        if route.attrib['id'] != route_id:
+            continue
+        town = route.attrib['town']
+        
+    client.load_world(town)
 
     # # Get the rest
     world = client.get_world()
@@ -171,8 +185,6 @@ def main():
     grp = GlobalRoutePlanner(tmap, 2.0)
     points = []
 
-    file_path = args.file[0]
-    route_id = args.file[1] if len(args.file) > 1 else 0
 
     # Get the data already at the file
     points, distance = get_saved_data(file_path, route_id, world, grp)

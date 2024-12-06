@@ -12,21 +12,15 @@ Provisional code to evaluate Autonomous Agents for the CARLA Autonomous Driving 
 """
 from __future__ import print_function
 
-print('start leaderboard_evaluator_local.py')
 import traceback
 import argparse
 from argparse import RawTextHelpFormatter
 from datetime import datetime
-from distutils.version import LooseVersion
 import importlib
 import os
-import pkg_resources
 import sys
-import carla
 import signal
 import socket
-import numpy as np
-import torch
 
 from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
@@ -87,11 +81,6 @@ class LeaderboardEvaluator(object):
         # Setup the simulation
         self.client, self.client_timeout, self.traffic_manager, self.traffic_manager_port = self._setup_simulation(args)
 
-        dist = pkg_resources.get_distribution("carla")
-        if dist.version != 'leaderboard':
-            if LooseVersion(dist.version) < LooseVersion('0.9.10'):
-                raise ImportError("CARLA version 0.9.10.1 or newer required. CARLA version found: {}".format(dist))
-
         # Load agent
         module_name = os.path.basename(args.agent).split('.')[0]
         sys.path.insert(0, os.path.dirname(args.agent))
@@ -139,6 +128,7 @@ class LeaderboardEvaluator(object):
         return False
 
     def _cleanup(self, results=None):
+    # def _cleanup(self):
         """
         Remove and destroy all actors
         """
@@ -198,7 +188,9 @@ class LeaderboardEvaluator(object):
 
         settings = carla.WorldSettings(
             synchronous_mode = True,
-            fixed_delta_seconds = 1.0 / self.frame_rate
+            fixed_delta_seconds = 1.0 / self.frame_rate,
+            deterministic_ragdolls = True,
+            spectator_as_ego = False
         )
         client.get_world().apply_settings(settings)
 
@@ -233,11 +225,7 @@ class LeaderboardEvaluator(object):
         Load a new CARLA world without changing the settings and provide data to CarlaDataProvider
         """
 
-        loaded_town = self.client.get_world().get_map().name.split('/')[-1]
-        if loaded_town != town:
-            self.world = self.client.load_world(town, reset_settings=False)
-        else:
-            self.world = self.client.get_world()
+        self.world = self.client.load_world(town, reset_settings=False)
 
         # Large Map settings are always reset, for some reason
         settings = self.world.get_settings()
@@ -253,9 +241,6 @@ class LeaderboardEvaluator(object):
 
         # This must be here so that all route repetitions use the same 'unmodified' seed
         self.traffic_manager.set_random_device_seed(args.traffic_manager_seed)
-        np.random.seed(args.traffic_manager_seed)
-        random.seed(args.traffic_manager_seed)
-        torch.manual_seed(args.traffic_manager_seed)
 
         # Wait for the world to be ready
         self.world.tick()
@@ -274,9 +259,7 @@ class LeaderboardEvaluator(object):
         current_stats_record = self.statistics_manager.compute_route_statistics(
             route_date_string, route_index, self.manager.scenario_duration_system, self.manager.scenario_duration_game, crash_message
         )
-
         return current_stats_record
-
 
     def _load_and_run_scenario(self, args, config):
         """
@@ -386,7 +369,7 @@ class LeaderboardEvaluator(object):
         try:
             # Load scenario and run it
             if args.record:
-                self.client.start_recorder("{}.log".format(args.record), False) # changed to False, otherwise the log file become too large
+                self.client.start_recorder("{}/{}_rep{}.log".format(args.record, config.name, config.repetition_index))
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
             self.manager.run_scenario()
 
@@ -468,7 +451,6 @@ class LeaderboardEvaluator(object):
         return crashed
 
 def main():
-    print("Running main() in leaderboard_evaluator_local.py")
     description = "CARLA AD Leaderboard Evaluation: evaluate your Agent in CARLA scenarios\n"
 
     # general parameters
@@ -504,7 +486,7 @@ def main():
 
     parser.add_argument("--track", type=str, default='SENSORS',
                         help="Participation track: SENSORS, MAP")
-    parser.add_argument('--resume', type=bool, default=False,
+    parser.add_argument('--resume', type=int, default=False,
                         help='Resume execution from last checkpoint?')
     parser.add_argument("--checkpoint", type=str, default='./simulation_results.json',
                         help="Path to checkpoint used for saving statistics and resuming")
@@ -525,20 +507,6 @@ def main():
         sys.exit(-1)
     else:
         sys.exit(0)
-
-# CHANGED
-def main_eval(arguments):
-    description = "CARLA AD Leaderboard Evaluation: evaluate your Agent in CARLA scenarios\n"
-    statistics_manager = StatisticsManager()
-
-    try:
-        leaderboard_evaluator = LeaderboardEvaluator(arguments, statistics_manager)
-        leaderboard_evaluator.run(arguments)
-
-    except Exception as e:
-        traceback.print_exc()
-    finally:
-        del leaderboard_evaluator
 
 if __name__ == '__main__':
     main()

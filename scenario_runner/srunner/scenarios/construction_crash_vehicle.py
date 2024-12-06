@@ -95,15 +95,6 @@ class ConstructionObstacle(BasicScenario):
 
         self._end_wp = self._move_waypoint_forward(self._construction_wp, self._end_distance)
 
-        # add actors, that are relevant for the Expert to the list active_scenarios
-        traffic_warning = self.other_actors[1]
-        last_cone = self.other_actors[-2]
-
-        #sometimes ConstructionObstacle and ConstructionObstacleTwoWays are wrong labeled, hence distinguish them here
-        side_lane_wp = self._construction_wp.get_left_lane() if self._direction == 'right' else self._construction_wp.get_right_lane()
-        scenario_name = 'ConstructionObstacle' if side_lane_wp.lane_id * self._construction_wp.lane_id > 0 else 'ConstructionObstacleTwoWays'
-        CarlaDataProvider.active_scenarios.append((scenario_name, [traffic_warning, last_cone, self._direction, False, 1e9, 1e9, False])) # added
-
     def _move_waypoint_forward(self, wp, distance):
         dist = 0
         next_wp = wp

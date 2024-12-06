@@ -84,8 +84,8 @@ class ObsManager(ObsManagerBase):
     self._world = self.vehicle.get_world()
     self.criteria_stop = criteria_stop
 
-    maps_h5_path = self._map_dir / (self._world.get_map().name.split('/')[
-			                                -1] + '.h5')  # splitting because for Town13 the name is 'Carla/Maps/Town13/Town13' instead of 'Town13'
+    # splitting because for Town13 the name is 'Carla/Maps/Town13/Town13' instead of 'Town13'
+    maps_h5_path = self._map_dir / (self._world.get_map().name.split('/')[-1] + '.h5')
     with h5py.File(maps_h5_path, 'r', libver='latest', swmr=True) as hf:
       self._road = np.array(hf['road'], dtype=np.uint8)
       self._lane_marking_all = np.array(hf['lane_marking_all'], dtype=np.uint8)
@@ -117,11 +117,8 @@ class ObsManager(ObsManagerBase):
     if (stop_sign is not None) and (not criteria_stop.stop_completed):
       bb_loc = carla.Location(stop_sign.trigger_volume.location)
       bb_ext = carla.Vector3D(stop_sign.trigger_volume.extent)
-      # Workaround since the extents of trigger_volumes of stop signs are often wrong
-      # bb_ext.x = max(bb_ext.x, bb_ext.y)
-      # bb_ext.y = max(bb_ext.x, bb_ext.y)
-      bb_ext.x = 1.5
-      bb_ext.y = 1.5
+      bb_ext.x = max(bb_ext.x, bb_ext.y)
+      bb_ext.y = max(bb_ext.x, bb_ext.y)
       trans = stop_sign.get_transform()
       stops = [(carla.Transform(trans.location, trans.rotation), bb_loc, bb_ext)]
     return stops
@@ -135,10 +132,9 @@ class ObsManager(ObsManagerBase):
     ev_rot = ev_transform.rotation
     m_warp = self._get_warp_transform(ev_loc, ev_rot)
     # road_mask, lane_mask
-    road_mask = cv.warpAffine(self._road, m_warp, (self._width, self._width)).astype(np.bool)
-    lane_mask_all = cv.warpAffine(self._lane_marking_all, m_warp, (self._width, self._width)).astype(np.bool)
-    lane_mask_broken = cv.warpAffine(self._lane_marking_white_broken, m_warp,
-                                     (self._width, self._width)).astype(np.bool)
+    road_mask = cv.warpAffine(self._road, m_warp, (self._width, self._width)).astype(bool)
+    lane_mask_all = cv.warpAffine(self._lane_marking_all, m_warp, (self._width, self._width)).astype(bool)
+    lane_mask_broken = cv.warpAffine(self._lane_marking_white_broken, m_warp, (self._width, self._width)).astype(bool)
     image = np.zeros([self._width, self._width, 4], dtype=np.float32)
     alpha = 0.33
     image[road_mask] = (40, 40, 40, 0.1)
@@ -164,8 +160,14 @@ class ObsManager(ObsManagerBase):
       return c_distance and (not c_ev)
 
     actors = self._world.get_actors()
-    vehicles = actors.filter('*vehicle*')
+    vehicles = list(actors.filter('*vehicle*'))
     walkers = actors.filter('*walker*')
+    static_all = actors.filter('*static*')
+    for static in static_all:
+      if static.type_id == 'static.prop.mesh':
+        if 'mesh_path' in static.attributes:
+          if 'Car' in static.attributes['mesh_path']:
+            vehicles.append(static)
 
     # This style of generating bounding boxes is more ugly than just calling world.get_level_bbs in carla but it has
     # the advantage of not causing segfaults in the carla library :)
@@ -220,11 +222,10 @@ class ObsManager(ObsManagerBase):
         = self._get_history_masks(m_warp)
 
     # road_mask, lane_mask
-    road_mask = cv.warpAffine(self._road, m_warp, (self._width, self._width)).astype(np.bool)
-    sidewalk_mask = cv.warpAffine(self._sidewalk, m_warp, (self._width, self._width)).astype(np.bool)
-    lane_mask_all = cv.warpAffine(self._lane_marking_all, m_warp, (self._width, self._width)).astype(np.bool)
-    lane_mask_broken = cv.warpAffine(self._lane_marking_white_broken, m_warp,
-                                     (self._width, self._width)).astype(np.bool)
+    road_mask = cv.warpAffine(self._road, m_warp, (self._width, self._width)).astype(bool)
+    sidewalk_mask = cv.warpAffine(self._sidewalk, m_warp, (self._width, self._width)).astype(bool)
+    lane_mask_all = cv.warpAffine(self._lane_marking_all, m_warp, (self._width, self._width)).astype(bool)
+    lane_mask_broken = cv.warpAffine(self._lane_marking_white_broken, m_warp, (self._width, self._width)).astype(bool)
 
     # render
     if self.visualize:
@@ -300,10 +301,10 @@ class ObsManager(ObsManagerBase):
       stopline_in_pixel = np.array([[self._world_to_pixel(x)] for x in sp_locs])
       stopline_warped = cv.transform(stopline_in_pixel, m_warp)
       # Rounding to pixel coordinates is required by newer opencv versions
-      pt1 = (stopline_warped[0, 0] + 0.5).astype(np.int)
-      pt2 = (stopline_warped[1, 0] + 0.5).astype(np.int)
+      pt1 = (stopline_warped[0, 0] + 0.5).astype(int)
+      pt2 = (stopline_warped[1, 0] + 0.5).astype(int)
       cv.line(mask, tuple(pt1), tuple(pt2), color=1, thickness=6)
-    return mask.astype(np.bool)
+    return mask.astype(bool)
 
   def _get_mask_from_actor_list(self, actor_list, m_warp):
     mask = np.zeros([self._width, self._width], dtype=np.uint8)
@@ -323,7 +324,7 @@ class ObsManager(ObsManagerBase):
       corners_warped = cv.transform(corners_in_pixel, m_warp)
 
       cv.fillConvexPoly(mask, np.round(corners_warped).astype(np.int32), 1)
-    return mask.astype(np.bool)
+    return mask.astype(bool)
 
   @staticmethod
   def _get_surrounding_actors(bbox_list, criterium, scale=None):

@@ -32,6 +32,7 @@ from srunner.scenariomanager.scenarioatomics.atomic_trigger_conditions import (D
 from srunner.scenarios.basic_scenario import BasicScenario
 from srunner.tools.background_manager import LeaveSpaceInFront, SetMaxSpeed, ChangeOppositeBehavior, ChangeRoadBehavior
 
+
 def get_value_parameter(config, name, p_type, default):
     if name in config.other_parameters:
         return p_type(config.other_parameters[name]['value'])
@@ -183,9 +184,6 @@ class Accident(BasicScenario):
         # Set its initial conditions
         second_actor.apply_control(carla.VehicleControl(hand_brake=True))
         self.other_actors.append(second_actor)
-
-        # add actors that are relevant for the Expert to CarlaDataProvider.active_scenarios
-        CarlaDataProvider.active_scenarios.append((type(self).__name__, [police_car, second_actor, self._direction, False, 1e9, 1e9, False]))
 
     def _create_behavior(self):
         """
@@ -393,11 +391,6 @@ class ParkedObstacle(BasicScenario):
 
         self._end_wp = self._move_waypoint_forward(self._vehicle_wp, self._end_distance)
 
-        # add actors that are relevant for the Expert to CarlaDataProvider.active_scenarios
-        side_lane_wp = self._vehicle_wp.get_left_lane() if self._direction == 'right' else self._vehicle_wp.get_right_lane()
-        scenario_name = 'ParkedObstacle' if side_lane_wp.lane_id * self._vehicle_wp.lane_id > 0 else 'ParkedObstacleTwoWays'
-        CarlaDataProvider.active_scenarios.append((scenario_name, [parked_actor, None, self._direction, False, 1e9, 1e9, False]))
-
     def _create_behavior(self):
         """
         The vehicle has to drive the whole predetermined distance.
@@ -594,9 +587,6 @@ class HazardAtSideLane(BasicScenario):
         # Set its initial conditions
         bicycle_2.apply_control(carla.VehicleControl(hand_brake=True))
         self.other_actors.append(bicycle_2)
-
-        # add actors that are relevant for the Expert to CarlaDataProvider.active_scenarios
-        CarlaDataProvider.active_scenarios.append((type(self).__name__, [bicycle_1, bicycle_2, False, 1e9, 1e9, False])) # added
 
     def _create_behavior(self):
         """

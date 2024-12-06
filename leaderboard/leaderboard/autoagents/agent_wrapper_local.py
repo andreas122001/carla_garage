@@ -24,7 +24,7 @@ from leaderboard.autoagents.ros_base_agent import ROSBaseAgent
 
 DATAGEN = int(os.environ.get('DATAGEN', 0))
 
-MAX_ALLOWED_RADIUS_SENSOR = 3.0
+MAX_ALLOWED_RADIUS_SENSOR = 70.0
 QUALIFIER_SENSORS_LIMITS = {
     'sensor.camera.rgb': 4,
     'sensor.lidar.ray_cast': 1,
@@ -32,9 +32,7 @@ QUALIFIER_SENSORS_LIMITS = {
     'sensor.other.gnss': 1,
     'sensor.other.imu': 1,
     'sensor.opendrive_map': 1,
-    'sensor.speedometer': 1,
-    'sensor.camera.depth': 4, # for data generation
-    'sensor.camera.semantic_segmentation': 4 # for data generation
+    'sensor.speedometer': 1
 }
 SENSORS_LIMITS = {
     'sensor.camera.rgb': 8,
@@ -44,10 +42,9 @@ SENSORS_LIMITS = {
     'sensor.other.imu': 1,
     'sensor.opendrive_map': 1,
     'sensor.speedometer': 1,
-    'sensor.camera.depth': 4, # for data generation
-    'sensor.camera.semantic_segmentation': 4 # for data generation
+    'sensor.camera.depth': 8, # for data generation
+    'sensor.camera.semantic_segmentation': 8 # for data generation
 }
-
 ALLOWED_SENSORS = SENSORS_LIMITS.keys()
 
 
@@ -112,9 +109,9 @@ def validate_sensor_configuration(sensors, agent_track, selected_track):
             sensor_count[sensor['type']] = 1
 
     if agent_track in (Track.SENSORS_QUALIFIER, Track.MAP_QUALIFIER):
-        sensor_limits = SENSORS_LIMITS
-    else:
         sensor_limits = QUALIFIER_SENSORS_LIMITS
+    else:
+        sensor_limits = SENSORS_LIMITS
 
     for sensor_type, max_instances_allowed in sensor_limits.items():
         if sensor_type in sensor_count and sensor_count[sensor_type] > max_instances_allowed:
@@ -210,9 +207,10 @@ class AgentWrapper(object):
                                              yaw=sensor_spec['yaw'])
 
         elif type_ == 'sensor.other.gnss':
-            attributes['noise_alt_stddev'] = str(0.000005)
-            attributes['noise_lat_stddev'] = str(0.000005)
-            attributes['noise_lon_stddev'] = str(0.000005)
+            if DATAGEN==0:
+                attributes['noise_alt_stddev'] = str(0.000005)
+                attributes['noise_lat_stddev'] = str(0.000005)
+                attributes['noise_lon_stddev'] = str(0.000005)
             attributes['noise_alt_bias'] = str(0.0)
             attributes['noise_lat_bias'] = str(0.0)
             attributes['noise_lon_bias'] = str(0.0)

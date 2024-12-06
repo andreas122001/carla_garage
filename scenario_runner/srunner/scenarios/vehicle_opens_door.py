@@ -146,9 +146,6 @@ class VehicleOpensDoorTwoWays(BasicScenario):
 
         self._end_wp = self._move_waypoint_forward(self._front_wp, self._end_distance)
 
-        # add actors that are relevant for the Expert to CarlaDataProvider.active_scenarios
-        CarlaDataProvider.active_scenarios.append((type(self).__name__, [self._parked_actor, None, self._direction, False, 1e9, 1e9, False])) # added
-
     def _create_behavior(self):
         """
         Leave space in front, as the TM doesn't detect open doors, and change the opposite frequency 
