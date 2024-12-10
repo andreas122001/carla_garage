@@ -166,7 +166,7 @@ def main():
   print(f'Unkown arguments: {unknown}')
   num_repetitions = args.num_repetitions
   benchmark = args.benchmark
-  experiment = "tfpp_009_ensemble_0_1_2" #args.experiment # TODO
+  experiment = args.experiment
   model_dir = args.model_dir
   code_root = args.code_root
   carla_root = args.carla_root
@@ -197,10 +197,9 @@ def main():
       exp_names.append(name + '_' + epoch)
 
     checkpoint = experiment
-    # checkpoint_new_name = checkpoint + '_' + epoch  # TODO
-    checkpoint_new_name = "tfpp_009_ensemble_0_1_2"
+    checkpoint_new_name = checkpoint + '_' + epoch
     # Links the model file into team_code
-    copy_model = False
+    copy_model = True
 
     if copy_model:
       # copy checkpoint to my folder
