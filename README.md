@@ -140,6 +140,10 @@ Note that the CARLA leaderboard 2.0 test routes should not be confused with the 
 Note that the results of models on Longest6 v2 are not directly comparable to the leaderboard 1.0 longest6 numbers.
 The benchmark can be found [here](leaderboard/data/longest6.xml) and the individual route files [here](leaderboard/data/longest6_split). Unlike the leaderboard 1.0 version, there are no modifications to the CARLA leaderboard code. Longest6 is a training benchmark, so training on Town 01-06 is allowed.
 
+### Common mistakes in benchmarking autonomous driving
+Benchmarking entire autonomous driving stacks is hard, and it is easy to get important subtle details wrong.
+Unfortunately, the literature is riddled with these methodological mistakes. As an attempt to improve this situation we have written a guide on [common mistakes in benchmarking](docs/common_mistakes_in_benchmarking_ad.md), for authors to avoid them and reviewers to catch them.
+
 ## Dataset
 We released the dataset we used to train the released model.
 Note that this dataset was generated with a slightly older version of PDM-Lite than we have in the repository.
