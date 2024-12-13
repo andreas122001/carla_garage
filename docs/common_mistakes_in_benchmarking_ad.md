@@ -1,29 +1,30 @@
-# Common mistakes in benchmarking autonomous driving
+# Common Mistakes in Benchmarking Autonomous Driving
 
-Benchmarking entire autonomous driving stacks is hard, and it is easy to get important subtle details wrong. Unfortunately, the literature is riddled with these methodological mistakes.
-This document is an attempt to list these errors so that reviewers can spot them and authors can avoid them.
-The point of this document is not to criticize individual authors or works. We all make mistakes. 
-Science is a self-correcting process, what matters is how we move forward.
-As such, we will focus on the methodological mistakes and not the papers making them. Hence, we will not cite the works we refer to.
-Many of the things we point out here are known, but are often not stated explicitly and instead, readers need to read between the lines when reading papers to get these messages. This makes it hard for authors entering the field and people who only follow the literature on the side to understand what is going on.
-This article summarizes the various methodological problems we observe in the literature and tries to be more explicit than prior work.
+Evaluating entire autonomous driving systems is a complex task, that is prone to subtle but significant errors. Unfortunately, such methodological mistakes are widespread in the autonomous driving literature.
+This document aims to outline these issues so that reviewers can identify them and authors can avoid them.
+The intent of this document is not to criticize individual authors or works. We all make mistakes. 
+Science is a self-correcting process, what matters is how we address and rectify issues.
+As such, we will focus on the methodological mistakes, without citing the works we refer to.
 
-Benchmarking a full autonomous driving system in a manner that is reproducible across research labs first became possible around 2017 with the release of the [CARLA simulator](https://arxiv.org/abs/1711.03938). In the years ever since, various benchmarks have been proposed for CARLA and other simulators.
-Before covering more specific mistakes made in CARLA benchmarks, we have to however get an elephant out of the room:
+Many of the points we raise may be familiar to experts, but are often stated implicitly rather than explicitly. As a result, readers often need to read between the lines to get these messages. This implicit communication makes it hard for newcomers to the field and for those who with a peripheral interest in the literature to understand what is going on.
+This article summarizes the various methodological problems we observe in the literature, aiming to be more explicit than prior work.
+
+The ability to benchmark full autonomous driving systems in a manner that is reproducible across research laboratories first became possible around 2017 with the introduction of the [CARLA simulator](https://arxiv.org/abs/1711.03938). In the years ever since, various benchmarks have been proposed for CARLA and other simulators.
+Before covering more specific mistakes made in CARLA benchmarks, we have to however address a bigger issue:
 
 ## NuScenes Planning
-### You should not trust the L2 metric.
+### Open-loop trajectory errors are unreliable.
 
 [NuScenes](https://arxiv.org/abs/1903.11027) is a well-known autonomous driving dataset that features various computer vision benchmarks.
-Using a dataset like nuScenes to evaluate the planning output of an autonomous driving stack is called open-loop planning, and works by feeding the sensor data in the stack and comparing its prediction with the ground truth action from the human driver in the dataset. The reason this is called open-loop planning is that the sensor input of future frames will not depend on the prediction of the driving stack, and neither will the other cars react to its behavior. The appeal of open-loop planning is that is computationally much cheaper to evaluate than to evaluate a stack closed-loop (either in the real world or in simulation) and unlike simulators, it does not introduce a sim-to-real gap with respect to the sensor data.
-Due to its appeal, it was investigated early on whether the open-loop L2 loss could act as a reliable performance indicator for closed-loop performance (what we actually care about).
+Using a dataset like nuScenes to evaluate the planning output of an autonomous driving stack is called open-loop planning, and works by feeding the sensor data in the stack and comparing its prediction with the ground truth action from the human driver in the dataset. This is called open-loop planning because the sensor input of future frames will not depend on the prediction of the driving stack, and neither will the other cars react to its behavior. Open-loop planning is appealing due to its computational efficiency compared to closed-loop evaluation (either in the real world or in simulation) and it does not introduce a sim-to-real gap with respect to the sensor data, unlike simulators.
+Given these advantages, it was investigated early on whether the open-loop trajectory errors, measured via L2 loss, could act as a reliable performance indicator for closed-loop performance, which is what we ultimately want.
 Unfortunately, this turned out not to be the case as was shown in [Codevilla et al. 2018](https://openaccess.thecvf.com/content_ECCV_2018/papers/Felipe_Codevilla_On_Offline_Evaluation_ECCV_2018_paper.pdf). The open-loop L2 error did not necessarily correlate with the closed-loop error. In other words, the open-loop L2 loss can be misleading.
-The community focused its benchmarking efforts on closed-loop simulation as a result.
+As a result, the community focused its benchmarking efforts on closed-loop simulation.
 As researchers working on end-to-end autonomous driving solutions, we can confirm these results. In our experience, open-loop validation losses of end-to-end systems are not useful as indicators for closed-loop performance, and we therefore do not report them.
 
 ### The L2 metric became popular.
-For the reason outlined before, the nuScenes paper itself did **not** propose a benchmark for planning (according to private communication with the authors, intentionally so).
-However, the planning community grew a lot around 2022/2023 and researchers, seemingly unaware of these early results, started using the nuScenes dataset to benchmark planning using the L2 loss (or variants of this, called displacement errors) as a primary metric. This benchmark became known as nuScenes Planning. Due to the good reputation of nuScenes in the vision community (and one of the papers using the benchmark winning a prestigious vision award), this benchmark was widely adopted.
+For the reason outlined before, the nuScenes paper itself did **not** propose a planning benchmark (according to private communication with the authors, intentionally so).
+However, the planning community grew significantly around 2022/2023 and some researchers, seemingly unaware of these early results, began using the nuScenes dataset to benchmark planning using the L2 loss (or variants of this, called displacement errors) as a primary metric. This benchmark became known as nuScenes Planning. Due to the good reputation of nuScenes in the vision community (and one of the papers using the benchmark winning a prestigious vision award), this benchmark was widely adopted.
 
 ### NuScenes planning led to misleading results.
 Some papers supplemented their nuScenes planning results with closed-loop CARLA simulation results. This made it quite apparent that the nuScenes planning methods were behind the state-of-the-art methods from CARLA (although readers would need to read that between the lines as only older papers were reported as CARLA baselines).
