@@ -1,7 +1,7 @@
 <p align="center">
   <img src="assets/carla_garage_white.png" alt="CARLA garage" width="500"/>
   <h3 align="center">
-        <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> LB2 Technical Report</a> | <a href="https://arxiv.org/abs/2306.07957.pdf"> Paper</a> | <a href="https://youtu.be/ChrPW8RdqQU">Video</a> | <a href="https://youtu.be/x_42Fji1Z2M?t=1073">Talk</a> | <a href="https://www.cvlibs.net/shared/common_misconceptions.pdf"> Slides</a> | <a href="https://github.com/autonomousvision/carla_garage/tree/main/assets/Jaeger2023ICCV_Poster.pdf">Poster</a>
+        <a href="https://arxiv.org/abs/2412.09602"> LB2 Technical Report</a> | <a href="https://arxiv.org/abs/2306.07957.pdf"> Paper</a> | <a href="https://youtu.be/ChrPW8RdqQU">Video</a> | <a href="https://youtu.be/x_42Fji1Z2M?t=1073">Talk</a> | <a href="https://www.cvlibs.net/shared/common_misconceptions.pdf"> Slides</a> | <a href="https://github.com/autonomousvision/carla_garage/tree/main/assets/Jaeger2023ICCV_Poster.pdf">Poster</a>
   </h3>
 </p>
 
@@ -15,7 +15,7 @@
 
 <p align="center" style="font-size:20px;">
 This repository contains the first complete starter kit for the CARLA leaderboard 2.0 where all components are open-source including the dataset, expert driver, evaluation and training code.
-We additionally provide pre-trained model weights for TransFuser++ which is the best open-source model at the time of publication. The paper <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> Hidden Biases of End-to-End Driving Models </a> describes the method and the <a href="https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf"> LB2 Technical Report</a> discusses the changes we made to adapt TransFuser++ to the CARLA leaderboard 2.0. <br/><br/>
+We additionally provide pre-trained model weights for TransFuser++ which is the best open-source model at the time of publication. The paper <a href="https://arxiv.org/abs/2306.07957"> Hidden Biases of End-to-End Driving Models </a> describes the method and the <a href="https://arxiv.org/abs/2412.09602"> LB2 Technical Report</a> discusses the changes we made to adapt TransFuser++ to the CARLA leaderboard 2.0. <br/><br/>
 The leaderboard 1.0 code can be found on the <a href="https://github.com/autonomousvision/carla_garage/tree/leaderboard_1"> leaderboard_1</a> branch.
 </p>
 
@@ -244,10 +244,11 @@ TransFuser++ Method:
 
 TransFuser++ Leaderboard 2.0 changes
 ```BibTeX
-@Misc{Zimmerlin2024TECHREPORT,
+@article{Zimmerlin2024ArXiv,
   title={Hidden Biases of End-to-End Driving Datasets},
   author={Julian Zimmerlin and Jens Beißwenger and Bernhard Jaeger and Andreas Geiger and Kashyap Chitta},
-  howpublished = {\textsc{url:}~\url{https://opendrivelab.github.io/Challenge%202024/carla_Tuebingen%20AI.pdf}},
+  journal={arXiv.org},
+  volume={2412.09602},
   year={2024}
 }
 
