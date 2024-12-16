@@ -283,6 +283,8 @@ Bench2Drive benchmark:
 ```
 
 ## Acknowledgements
+The original code in this repository was written by Bernhard Jaeger, Julian Zimmerlin and Jens Beißwenger. Andreas Geiger and Kashyap Chitta have contributed as technical advisors.
+
 Open source code like this is build on the shoulders of many other open source repositories.
 Particularly, we would like to thank the following repositories for their contributions:
 * [scenario_runner](https://github.com/carla-simulator/scenario_runner)

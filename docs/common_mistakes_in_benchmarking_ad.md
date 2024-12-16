@@ -104,53 +104,64 @@ The recent [NAVSIM leaderboard](https://huggingface.co/spaces/AGC2024-P/e2e-driv
 
 
 ## Proprietary benchmarks
-Many autonomous driving papers written by industrial labs are not evaluated on public datasets or benchmarks, and do neither release their code, models nor data.
-Given how tricky it is to assess the validity of claims made even on public data, this can lead to a lack of trust in those papers. As readers, we can often only say that this might be an interesting idea, but we cannot judge from the paper whether it actually works better than existing ideas or not.
-Reproducing ideas simply based on the paper is often tricky and requires months of work and can fail because the idea wasn't actually working, or important technical details have been omitted.
-As a result, many autonomous driving papers from industry are never reproduced.
-This has the second-order effect that some of these ideas probably don't get the attention they deserve (in terms of citations and community adoption).
+A significant number of autonomous driving papers authored by industrial labs are not evaluated on publicly available datasets or benchmarks, nor do they release code, models or data.
+Considering the challenges in assessing the validity of claims made even when public data is used, this practice can erode trust in these works. As readers, we can often only conclude that the presented idea might be of interest, but we cannot determine from the paper alone whether it outperforms existing approaches.
 
-### Reasons for not publishing the code of a paper:
+Reproducing ideas solely based on the description in the paper is often a complex and time-intensive task that can take months. Moreover, attempts at reproduction may fail, either because the described idea was not genuinely effective or because crucial technical details were omitted.
+As a result, many autonomous driving papers originating from industry are never reproduced.
+This can have the secondary effect that some promising ideas may not get the attention they deserve in terms of citations or community adoption.
 
-As we have said before, there is no scientific argument for withholding code in autonomous driving.
-There are however other types of reasons why authors don't publicize their code.
-1. The presented idea does not really work, and the authors are trying to hide that by making the paper hard to reproduce.
-2. The authors have a financial interest in the idea and do not want their competitors to be able to use their work.
-3. Cleaning code for publication requires extra effort, and the authors do not have the time to do it.
+### Reasons for withholding code:
 
-The problem now is that papers from groups 2 and 3 will inadvertently get associated with papers from group 1 because there is no practical way to tell them apart.
-We would like to propose a different solution for groups 2 and 3 than not publishing the code. 
+As we have said before, there is no scientific justification for withholding code in the context of autonomous driving.
+Nonetheless, there are reasons why authors may choose not to publicize their code.
+1. **The presented idea is ineffective**: The authors may intentionally obscure this by making the paper hard to reproduce.
+2. **Commercial interests**: The authors may seek to prevent competitors from utilizing their work to maintain a competitive advantage.
+3. **Resource constraints**: Preparing code for publication requires additional effort, and the authors may lack the time or resources to do so.
 
-### You should publish your code with a non-commercial license instead!
+The problem is that papers falling under the second and third categories will inadvertently get associated with papers from category one because there is no practical way to differentiate them.
+To address this, we propose an alternative approach for the second and third groups that avoids withholding the code. 
 
-What we would like to point out is that **there is no need to publish your code open-source**, as in with an open-source license. Scientifically, it is sufficient to publish your code under a **non-commercial research license**. Such licenses allow researchers to use your software to perform research (the result of which might benefit your company), but prevent your competitors from using your software (or at least they have to pay you to get a different license).
-Such licenses are already common practice for autonomous driving datasets, see the [nuScenes license](https://www.nuscenes.org/terms-of-use-commercial) as an example.
-Instead of keeping the code of papers secret, we encourage authors to publish their code under such licenses. Another example of such a license is the [Software Copyright License for non-commercial scientific research purposes](https://icon.is.tue.mpg.de/license.html) used by the Max Plank Institute for Intelligent Systems. As for the third group, just publish your code without cleaning it (most licenses have a clause protecting you from warranty). Publishing messy code is more valuable to the community than publishing no code.
+### Publish code under a non-commercial license!
+
+What we would like to point out is that **there is no need to publish your code with an open-source license**. From a scientific standpoint, it is sufficient to release code under a **non-commercial research license**. Such licenses permit researchers to use the software for research purposes (which may benefit the author's company) while preventing competitors from utilizing the software, unless they negotiate a different license.
+
+This practice is already well-established for autonomous driving datasets. For example, the [nuScenes license](https://www.nuscenes.org/terms-of-use-commercial) follows this approach.
+ Another example of such a license is the [Software Copyright License for non-commercial scientific research purposes](https://icon.is.tue.mpg.de/license.html) used by the Max Plank Institute for Intelligent Systems. 
+
+Rather than keeping the code entirely private, we encourage authors to publish their code under such licenses.
+For those concerned about the effort involved in cleaning their code, we recommend publishing it as is. Most licenses include disclaimers against warranties, and even unpolished code is more valuable to the research community than publishing none at all.
 
 
 ## The simulation argument
-We have argued in this text for benchmarking autonomous driving stacks using closed-loop simulations. A common concern that is often expressed is that simulations lack realism, and we need real data to get methods that work on real cars. Often implied is that using simulations for benchmarking might lead to misleading results. There is of course some truth to this argument, as it is possible to construct a misleading simulation. The problem with this claim is that it is usually taken as self-evident. We are not aware of actual empirical evidence that state-of-the-art simulators like CARLA or nuPlan have led to misleading results. (There are of course many misleading results out there, as we have argued above, but the simulator itself is not at fault here).
+This text advocates for benchmarking autonomous driving systems using closed-loop simulations. A commonly raised concern is that simulations lack realism, implying that real data is essential to develop methods that work on actual vehicles. This critique often suggests that simulation-based benchmarking may produce misleading results. While there is some validity to this concern, it is indeed possible to construct an unrepresentative simulation, the claim is often treated as self-evident. However, we are not aware of empirical evidence that demonstrates that state-of-the-art simulators like CARLA or nuPlan have led to misleading results. The misleading outcomes discussed earlier stem from factors unrelated to the simulators themselves.
 
+There are two counterarguments to the claim that simulators lack sufficient realism for reliable benchmarking:
 
 ### Driving simulators might already be realistic enough for benchmarking.
-There are two counterarguments to this claim. The first is that our current state-of-the-art simulators might be realistic enough to force researchers to develop general-purpose methods that still work when applied to real data/cars.
-The [CVPR 2024 NAVSIM challenge](https://arxiv.org/abs/2406.15349) (ran from March to May 2024) provided an interesting piece of evidence in that direction. 
-NAVSIM is a simulator that only uses real sensor data and as a result, is more realistic than for example CARLA in terms of its sensor data.
-As part of the challenge starter kit, the authors reproduced the TransFuser method on NAVSIM as a baseline. TransFuser is a method that was designed and developed entirely on synthetic CARLA data. Interestingly, the TransFuser baseline outperformed most of the 463 submissions, and the top solution was an extension of TransFuser. This suggests that using synthetic CARLA data can lead to the development of methods that work well on real-world data. Of course, this is only anecdotal evidence, and NAVSIM is still a simulation.
+ The first is that contemporary simulators may already be realistic enough to compel researchers to develop robust general-purpose methods that also perform effectively on actual vehicles.
+An illustrative example is the [CVPR 2024 NAVSIM challenge](https://arxiv.org/abs/2406.15349), conducted from March to May 2024. 
+NAVSIM is a simulator that only uses real sensor data and as a result, is more realistic than CARLA in terms of its sensor data.
+
+In the challenge, the organizers reproduced the TransFuser method on NAVSIM as a baseline. TransFuser is a method that was designed and developed entirely on synthetic CARLA data. Interestingly, the TransFuser baseline outperformed most of the 463 competing submissions. Furthermore, the top-performing solution was an extension of TransFuser. This suggests that methods developed on synthetic CARLA data can also excel on real-world data. Of course, this is anecdotal evidence, and NAVSIM is still a simulation.
 
 ### Sim-to-real transfer already works in other robotics fields.
-The second argument is that other robotics fields (in particular locomotion, agile flight, and indoor navigation) have managed to get zero-shot sim-to-real transfer to work. This is a recent development that has been called ["A quiet revolution in robotics"](https://www.youtube.com/watch?v=K09erFsOnxA). These methods trained entirely in simulation were able to work and significantly advance the state of the art on real robots. This represents an empirical refutation of the argument that simulations can not be realistic enough. However, to our knowledge, nobody has convincingly demonstrated the same level of sim-to-real transfer in autonomous driving yet.
-There is one company that publicly claimed to have built a driving simulation that exhibits similar properties, but not many details are known about this claim, so we can not evaluate its validity or extent.
+The second argument is that in other robotics fields, in particular locomotion, agile flight, and indoor navigation, zero-shot sim-to-real transfer has already been achieved. This recent development, described as ["A quiet revolution in robotics"](https://www.youtube.com/watch?v=K09erFsOnxA), involve methods trained entirely in simulation that were able to significantly advance the state of the art on real-world robots. This represents an empirical refutation of the argument that simulations can not be realistic enough for developing effective methods. However, it is important to note that a comparable level of sim-to-real transfer has not yet been convincingly demonstrated in the domain of autonomous driving.
+There is one company that publicly claimed to have built a driving simulation that exhibits similar capabilities. However, due to the lack of publicly available details it is impossible to evaluate the validity or extent of this claim.
 
-### There is no reason to stop using simulators for benchmarking.
-So for now, the claim that the lack of realism in simulations is a fundamental problem for benchmarking can not be entirely refuted. Current evidence points in the opposite direction, so there is no reason to stop using simulations for benchmarking. Data-driven simulations like [NAVSIM](https://arxiv.org/abs/2406.15349), [nuPlan](https://arxiv.org/abs/2106.11810) (not to be confused with nuScenes planning) or [Waymax](https://arxiv.org/abs/2310.08710) offer a complement to synthetic simulators like CARLA, but cannot replace them because they are generally easier to solve due to their lack of long simulations and safety-critical scenarios (performance is currently >90% on data-driven simulators and <10% on the hardest CARLA benchmark).
+### There is no justification to abandon simulators for benchmarking.
+Currently, the claim that the lack of realism in contemporary simulations is a fundamental problem for benchmarking can not be entirely refuted. However, current evidence points suggests that simulations remain a valuable tool, so there is no justification to abandon simulations for benchmarking. Data-driven simulations like [NAVSIM](https://arxiv.org/abs/2406.15349), [nuPlan](https://arxiv.org/abs/2106.11810) (not to be confused with nuScenes planning) or [Waymax](https://arxiv.org/abs/2310.08710) offer a important complement to synthetic simulators like CARLA. However, they cannot replace synthetic simulators entirely, because current data-driven simulations are easier to solve due to their lack of long simulations and safety-critical scenarios. Performance metrics currently exceed 90% on data-driven simulators and remain below 10% on the most challenging CARLA benchmark.
 
 
 ## The need for public research: 
-Around 10 years ago, when neural networks became popular, there was a lot of excitement in the autonomous driving field which created the myth that "The science is solved." This was understandable at the time when limitations of neural networks like shortcut learning weren't known yet, and we didn't know about the long tail. 10 years and billions in investments later, it has become clear that this notion at the time was overly optimistic. It could be argued today that our scientific understanding is at a level that could allow for the deployment of level 4 systems. Whether these can be built profitably remains to be seen, and it is clear that to build a level 5 system we need fundamental scientific advancements. The economic and practical advantages of having a system that can be deployed everywhere (level 5) compared to building custom solutions per region (level 4) should be enormous.
-Public research has a huge cost advantage compared to private research, as every dollar spent on public research benefits every company in the space whereas private research only benefits one company, which means spending money on rediscovering the same ideas multiple times.
-In our view, it is important to realize that **the autonomous driving effort is a competition against reality first and foremost**. We need public research that adheres to rigorous scientific practices in order to win this competition!
+Approximately a decade ago, with the rise in popularity of neural networks, the field of autonomous driving was swept by enthusiasm, which gave birth to the myth that "The science is solved." This optimism was understandable at the time, when limitations of neural networks, such as shortcut learning, were not known yet, and the challenges posed by the long tail of driving scenarios were not yet well understood. However, 10 years and billions of dollars in investments later, it has become evident that this initial confidence was overly optimistic. 
 
-13.12.2024
+Today, it could be argued that our current level of scientific understanding is sufficient to enable the deployment of Level 4 autonomous driving systems. Whether such systems can be built in a commercially viable manner remains uncertain. However, it is clear that achieving Level 5 autonomy will require fundamental scientific advancements. The economic and practical advantages of deploying a universal system (Level 5) compared to building region-specific solutions (Level 4) are likely to be enormous.
 
-PS: If you are aware of additional problems in benchmarking autonomous driving that are not yet covered here, please get in touch.
+Public research offers a significant cost advantage over private research. Every dollar invested in public research contributes to the advancement of the entire field, benefiting all companies. In contrast, private research only benefits one company, leading to duplicated efforts as the same ideas are rediscovered multiple times.
+
+It is essential to recognize that **the autonomous driving challenge is, above all, a competition against reality itself**. We need public research that adheres to rigorous scientific practices in order to overcome this challenge!
+
+Bernhard Jaeger, Kashyap Chitta, Daniel Dauner, Katrin Renz, Andreas Geiger; 16.12.2024
+
+PS: If you are aware of additional issues related to benchmarking autonomous driving that are not yet discussed here, we encourage you to get in touch (bernhard.jaeger@uni-tuebingen.de).
