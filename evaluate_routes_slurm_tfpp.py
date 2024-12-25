@@ -122,7 +122,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('--benchmark', type=str, default='routes_validation',
                       help='Route files need to be stored in {benchmark}_split folder'
-                           'Options: , longest6, routes_validation, bench2drive')
+                           'Options: , longest6, routes_validation')
   parser.add_argument('--experiment',
                       type=str,
                       required=True,
