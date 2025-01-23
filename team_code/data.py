@@ -273,7 +273,7 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
 
   def __getitem__(self, index):
     """Returns the item at index idx. """
-    # Disable threading because the data loader will already split in threads.
+    # Disable threading because the data loader will already split in processes.
     cv2.setNumThreads(0)
 
     data = {}
