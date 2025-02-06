@@ -1,0 +1,4 @@
+
+tfpp-pdm_lite-max_speed21_lav
+- Trained on Town12 w/ ppm=2.0, x,y: [-64, 64], z: [-8, 8], z_proj: [-10, 14]
+- max speed is 21 m/s with target speed balancing

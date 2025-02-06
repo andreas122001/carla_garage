@@ -22,7 +22,8 @@ def main():
 
   print('Remember to launch the Carla Server!')
   client = carla.Client('localhost', args.port)
-  maps = [os.path.basename(m) for m in client.get_available_maps()]
+  maps = [os.path.basename(m) for m in client.get_available_maps() if 'Town13' in m]
+  #maps = [os.path.basename(m) for m in client.get_available_maps()]
   carla_wrapper = CarlaWrapper(args)
   if not os.path.exists(args.map_data_folder):
     os.makedirs(args.map_data_folder)

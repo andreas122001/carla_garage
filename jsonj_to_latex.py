@@ -111,11 +111,11 @@ def overall_results_comparison(d1, d2):
     print()
 
 
-# import ujson
+import ujson
 
-# with open("dataset_default_results.json") as f:
+# with open("eval_default_town13.json") as f:
 #     d1 = ujson.load(f)
-# with open("dataset_pdml_results.json") as f:
+# with open("eval_pdml_town13.json") as f:
 #     d2 = ujson.load(f)
 
 # with open("tfpp_default_model_results.json") as f:
@@ -127,16 +127,16 @@ def overall_results_comparison(d1, d2):
 simple_table_line(
     {
         "Total": {
-           "scores_mean": {
-                "score_composed": 0.084698,
-                "score_route": 8.643,
-                "score_penalty": 0.086981
-            },
-            "scores_std": {
-                "score_composed": 0.152,
-                "score_route": 9.804,
-                "score_penalty": 0.137
-            },
+        "scores_mean": {
+            "score_route": 99.92665789473683,
+            "score_penalty": 0.9287680268421051,
+            "score_composed": 92.83328601052634
+        },
+        "scores_std": {
+            "score_route": 0.44612260978792573,
+            "score_penalty": 0.06691674974273573,
+            "score_composed": 6.71040464448619
         }
+    }
     }
 )

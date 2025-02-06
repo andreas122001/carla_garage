@@ -20,15 +20,15 @@ cd $WORK_DIR
 pwd
 
 # Epochs: 31
-torchrun --nnodes=1 --nproc_per_node=2 --max_restarts=1 --rdzv_id=42353467 --rdzv_backend=c10d \
+torchrun --nnodes=1 --nproc_per_node=1 --max_restarts=1 --rdzv_id=42353467 --rdzv_backend=c10d \
 /cluster/work/andrebw/carla_garage_main/team_code/train.py \
-  --id tfpp-pdm_lite-max_speed21 \
+  --id tfpp-debug \
   --epochs 31 \
-  --batch_size 24 \
+  --batch_size 8 \
   --use_focal_loss 0 \
   --logdir logs \
   --use_disk_cache 0 \
-  --cpu_cores 20 \
+  --cpu_cores 24 \
   --augment 0 \
   --use_plant 0 \
   --num_repetitions 1 \
@@ -41,7 +41,8 @@ torchrun --nnodes=1 --nproc_per_node=2 --max_restarts=1 --rdzv_id=42353467 --rdz
   --detect_boxes 1 \
   --use_depth 1 \
   --setting "all" \
-  --root_dir /cluster/work/andrebw/carla_garage/database/dataset_4hz_2024_10_26/data 
+  --root_dir /cluster/work/andrebw/carla_garage/database/dataset_default_expert2024_11_08/data
+  # --root_dir /cluster/work/andrebw/carla_garage/database/dataset_4hz_2024_10_26/data 
   # --root_dir /cluster/work/andrebw/carla_garage_main/dataset/hb_dataset_v01_2024_10_17
   # --load_file /cluster/work/andrebw/carla_garage_main/logs/transfuser++\
 #  --local_rank 0

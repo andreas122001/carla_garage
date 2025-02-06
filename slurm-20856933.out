@@ -1,0 +1,4 @@
+srun: Job step aborted: Waiting up to 62 seconds for job step to finish.
+slurmstepd: error: *** STEP 20856933.0 ON idun-07-10 CANCELLED AT 2024-11-08T21:38:09 ***
+slurmstepd: error: *** JOB 20856933 ON idun-07-10 CANCELLED AT 2024-11-08T21:38:09 ***
+srun: error: idun-07-10: task 0: Terminated

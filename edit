@@ -1,0 +1,21 @@
+\begin{table}[htp!]
+    \centering
+    \begin{tabular}{c|c|c|c}
+          & Driving score $\uparrow$ & Penalty score $\uparrow$ & Route completion $\uparrow$ \\\hline
+        TF++ Default & 44.39 $\pm$ \textcolor{gray}{ 21.80} & 0.48 $\pm$ \textcolor{gray}{ 0.20} & 87.74 $\pm$ \textcolor{gray}{ 12.54 }\\\hline
+        TF++ PDM-Lite & 52.17 $\pm$ \textcolor{gray}{ 20.38} & 0.54 $\pm$ \textcolor{gray}{ 0.20} & 93.84 $\pm$ \textcolor{gray}{ 6.32 }\\
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:expert_results}
+\end{table}
+
+\begin{table}[htp!]
+    \centering
+    \begin{tabular}{c|c|c|c}
+          & Driving score $\uparrow$ & Penalty score $\uparrow$ & Route completion $\uparrow$ \\\hline
+        TF++ Default & 0.06 $\pm$ \textcolor{gray}{ 0.08} & 0.16 $\pm$ \textcolor{gray}{ 0.17} & 2.75 $\pm$ \textcolor{gray}{ 4.24 } \\\hline
+        TF++ PDM-Lite & 0.08 $\pm$ \textcolor{gray}{ 0.15} & 0.09 $\pm$ \textcolor{gray}{ 0.14} & 8.64 $\pm$ \textcolor{gray}{ 9.80 }\\
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:expert_results}
+\end{table}

@@ -16,9 +16,9 @@ import sys
 
 # Our centOS is missing some c libraries.
 # Usually miniconda has them, so we tell the linker to look there as well.
-newlib = '/path/to/miniconda3/lib/'
-if not newlib in os.environ['LD_LIBRARY_PATH']:
-  os.environ['LD_LIBRARY_PATH'] += ':' + newlib
+# newlib = '/path/to/miniconda3/lib/'
+# if not newlib in os.environ['LD_LIBRARY_PATH']:
+#   os.environ['LD_LIBRARY_PATH'] += ':' + newlib
 
 
 def create_run_eval_bash(bash_save_dir, results_save_dir, route_path, route, checkpoint, logs_save_dir,
@@ -30,28 +30,28 @@ export CARLA_ROOT={carla_root}
 export CARLA_SERVER=${{CARLA_ROOT}}/CarlaUE4.sh
 export PYTHONPATH=$PYTHONPATH:${{CARLA_ROOT}}/PythonAPI
 export PYTHONPATH=$PYTHONPATH:${{CARLA_ROOT}}/PythonAPI/carla
-export PYTHONPATH=$PYTHONPATH:${{CARLA_ROOT}}/PythonAPI/carla/dist/carla-0.9.10-py3.7-linux-x86_64.egg
-export SCENARIO_RUNNER_ROOT=scenario_runner
-export LEADERBOARD_ROOT=leaderboard
+export PYTHONPATH=$PYTHONPATH:${{CARLA_ROOT}}/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg
+export SCENARIO_RUNNER_ROOT=/cluster/work/andrebw/carla_garage/scenario_runner
+export LEADERBOARD_ROOT=/cluster/work/andrebw/carla_garage/leaderboard
 export PYTHONPATH="${{CARLA_ROOT}}/PythonAPI/carla/":"${{SCENARIO_RUNNER_ROOT}}":"${{LEADERBOARD_ROOT}}":${{PYTHONPATH}}
 ''')
     rsh.write(f"""
 export PORT=$1
 echo 'World Port:' $PORT
-export TM_PORT=`comm -23 <(seq {carla_tm_port_start} {carla_tm_port_start+49} | sort) <(ss -Htan | awk '{{print $4}}' | cut -d':' -f2 | sort -u) | shuf | head -n 1`
+export TM_PORT=`comm -23 <(seq {carla_tm_port_start} {carla_tm_port_start+400} | sort) <(ss -Htan | awk '{{print $4}}' | cut -d':' -f2 | sort -u) | shuf | head -n 1`
 echo 'TM Port:' $TM_PORT
-export ROUTES={route_path}{route}.xml
-export SCENARIOS=leaderboard/data/scenarios/eval_scenarios.json
-export TEAM_AGENT=team_code/sensor_agent.py
-export TEAM_CONFIG=team_code/checkpoints/{checkpoint}/
-export CHALLENGE_TRACK_CODENAME=SENSORS
+export ROUTES={route_path}
+# export TEAM_AGENT=team_code/sensor_agent.py
+export TEAM_AGENT=/cluster/work/andrebw/carla_garage/team_code/data_agent.py
+export TEAM_CONFIG=logs/{checkpoint}/
+export CHALLENGE_TRACK_CODENAME=MAP
 export REPETITIONS=1
 export RESUME=1
 export CHECKPOINT_ENDPOINT={results_save_dir}/{route}.json
-export DEBUG_CHALLENGE=0
+export DEBUG_CHALLENGE=1
 export DATAGEN=0
 export SAVE_PATH={logs_save_dir}
-export DIRECT=1
+export DIRECT=0
 export UNCERTAINTY_WEIGHT=1
 export UNCERTAINTY_THRESHOLD=0.5
 export HISTOGRAM=0
@@ -62,22 +62,29 @@ export SLOWER=1
 export STOP_CONTROL=1
 export TP_STATS=0
 export BENCHMARK={benchmark}
+
+echo "Loading modules..."
+module load Anaconda3/2024.02-1
+module load libjpeg-turbo/2.1.5.1-GCCcore-12.3.0
+              
+echo "Activating conda environment..."
+conda activate garage
+conda env list
 """)
     rsh.write('''
-python3 ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_local.py \
---scenarios=${SCENARIOS}  \
+python3 -u ${LEADERBOARD_ROOT}/leaderboard/leaderboard_evaluator_local.py \
 --routes=${ROUTES} \
 --repetitions=${REPETITIONS} \
 --track=${CHALLENGE_TRACK_CODENAME} \
 --checkpoint=${CHECKPOINT_ENDPOINT} \
 --agent=${TEAM_AGENT} \
 --agent-config=${TEAM_CONFIG} \
---debug=0 \
+--debug=1 \
 --record=${RECORD_PATH} \
 --resume=${RESUME} \
 --port=${PORT} \
---timeout=600 \
---trafficManagerPort=${TM_PORT}
+--timeout=120 \
+--traffic-manager-port=${TM_PORT}
 ''')
 
 
@@ -86,16 +93,18 @@ def make_jobsub_file(commands, job_number, exp_name, exp_root_name, partition):
   os.makedirs(f'evaluation/{exp_root_name}/{exp_name}/run_files/job_files', exist_ok=True)
   job_file = f'evaluation/{exp_root_name}/{exp_name}/run_files/job_files/{job_number}.sh'
   qsub_template = f"""#!/bin/bash
-#SBATCH --job-name={exp_name}{job_number}
+#SBATCH --job-name={job_number}-{exp_name}
 #SBATCH --partition={partition}
+#SBATCH --account=share-ie-idi
 #SBATCH -o evaluation/{exp_root_name}/{exp_name}/run_files/logs/qsub_out{job_number}.log
 #SBATCH -e evaluation/{exp_root_name}/{exp_name}/run_files/logs/qsub_err{job_number}.log
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=10gb
-#SBATCH --time=00-06:00
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=20gb
+#SBATCH --time=01-12:00:00
 #SBATCH --gres=gpu:1
+# #SBATCH --constraint=(a100)
 """
   for cmd in commands:
     qsub_template = qsub_template + f"""
@@ -122,19 +131,23 @@ def get_num_jobs(job_name, username):
 
 
 def main():
-  num_repetitions = 3
-  benchmark = 'lav'
-  experiment = 'secret_040_0'
-  model_dir = '/path/to/model/logdir'
-  code_root = '/path/to/carla_garage'
-  carla_root = '/path/to/CARLA'
-  partition = 'slurm-gpu-partition'
-  username = 'slurm_username'
+  import glob
+  num_repetitions = 1
+  benchmark = 'full'
+  experiment = 'pdm_lite'
+  model_dir = '/cluster/work/andrebw/carla_garage_main/logs'
+  code_root = '/cluster/work/andrebw/carla_garage'
+  carla_root = '/cluster/work/andrebw/carla_garage/carla/CARLA_Leaderboard_20'
+  partition = 'GPUQ'
+  username = 'andrebw'
   experiment_name_stem = f'{experiment}_{benchmark}'
   exp_names_tmp = []
   for i in range(num_repetitions):
     exp_names_tmp.append(experiment_name_stem + f'_e{i}')
-  route_path = f'leaderboard/data/{benchmark}_split/'
+  # route_path = f'leaderboard/data/{benchmark}_split/'
+  # route_path = '/cluster/work/andrebw/carla_garage/data/50x36_town_13'
+  # route_path = '/cluster/work/andrebw/carla_garage/data/town13_selection'
+  route_path = '/cluster/work/andrebw/carla_garage/leaderboard/data_validation'
   route_pattern = '*.xml'
 
   carla_world_port_start = 10000
@@ -154,11 +167,11 @@ def main():
     checkpoint_new_name = checkpoint + '_' + epoch
 
     # Links the model file into team_code
-    copy_model = True
+    copy_model = False
 
     if copy_model:
       # copy checkpoint to my folder
-      cmd = f'mkdir team_code/checkpoints/{checkpoint_new_name}'
+      cmd = f'mkdir -p {code_root}/team_code/checkpoints/{checkpoint_new_name}'
       print(cmd)
       os.system(cmd)
       cmd = f'cp {model_dir}/{checkpoint}/config.pickle team_code/checkpoints/{checkpoint_new_name}/'
@@ -168,12 +181,9 @@ def main():
       print(cmd)
       os.system(cmd)
 
-    route_files = []
-    for root, _, files in os.walk(route_path):
-      for name in files:
-        if fnmatch.fnmatch(name, route_pattern):
-          route_files.append(os.path.join(root, name))
-
+    route_files = glob.glob(f"{route_path}/**/*.xml", recursive=True) 
+    print("Num route files:", len(route_files))
+    
     for exp_name in exp_names:
       bash_save_dir = Path(f'evaluation/{experiment_name_root}/{exp_name}/run_bashs')
       results_save_dir = Path(f'evaluation/{experiment_name_root}/{exp_name}/results')
@@ -185,8 +195,8 @@ def main():
     meta_jobs = {}
 
     for exp_name in exp_names:
-      for route in route_files:
-        route = Path(route).stem
+      for route_file in route_files:
+        route = Path(route_file).stem
 
         bash_save_dir = Path(f'evaluation/{experiment_name_root}/{exp_name}/run_bashs')
         results_save_dir = Path(f'evaluation/{experiment_name_root}/{exp_name}/results')
@@ -196,22 +206,20 @@ def main():
 
         # Finds a free port
         commands.append(
-            f'FREE_WORLD_PORT=`comm -23 <(seq {carla_world_port_start} {carla_world_port_start + 49} | sort) '
+            f'FREE_WORLD_PORT=`comm -23 <(seq {carla_world_port_start} {carla_world_port_start + 400} | sort) '
             f'<(ss -Htan | awk \'{{print $4}}\' | cut -d\':\' -f2 | sort -u) | shuf | head -n 1`')
         commands.append("echo 'World Port:' $FREE_WORLD_PORT")
         commands.append(
-            f'FREE_STREAMING_PORT=`comm -23 <(seq {carla_streaming_port_start} {carla_streaming_port_start + 49} '
+            f'FREE_STREAMING_PORT=`comm -23 <(seq {carla_streaming_port_start} {carla_streaming_port_start + 400} '
             f'| sort) <(ss -Htan | awk \'{{print $4}}\' | cut -d\':\' -f2 | sort -u) | shuf | head -n 1`')
-        commands.append("echo 'Streaming Port:' $FREE_STREAMING_PORT")
-        commands.append(
-            f'SDL_VIDEODRIVER=offscreen SDL_HINT_CUDA_DEVICE=0 {carla_root}/CarlaUE4.sh '
-            f'-carla-rpc-port=${{FREE_WORLD_PORT}} -nosound -carla-streaming-port=${{FREE_STREAMING_PORT}} -opengl &')
-        commands.append('sleep 180')  # Waits for CARLA to finish starting
+        commands.append('echo "Launching CARLA with world-port=$FREE_WORLD_PORT and streaming-port=$FREE_STREAMING_PORT"')
+        commands.append(f'sh {carla_root}/CarlaUE4.sh --world-port=$FREE_WORLD_PORT -RenderOffScreen -nosound -graphicsadapter=0 -carla-streaming-port=$FREE_STREAMING_PORT &')
+        commands.append('sleep 20')  # Waits for CARLA to finish starting
         create_run_eval_bash(bash_save_dir,
                              results_save_dir,
-                             route_path,
+                             route_file,
                              route,
-                             checkpoint_new_name,
+                             checkpoint,
                              logs_save_dir,
                              carla_tm_port_start,
                              benchmark=benchmark,
@@ -220,9 +228,9 @@ def main():
         commands.append(f'./{bash_save_dir}/eval_{route}.sh $FREE_WORLD_PORT')
         commands.append('sleep 2')
 
-        carla_world_port_start += 50
-        carla_streaming_port_start += 50
-        carla_tm_port_start += 50
+        # carla_world_port_start += 50
+        # carla_streaming_port_start += 50
+        # carla_tm_port_start += 50
 
         job_file = make_jobsub_file(commands=commands,
                                     job_number=job_nr,
@@ -236,7 +244,8 @@ def main():
         print(f'{num_running_jobs}/{max_num_parallel_jobs} jobs are running...')
         while num_running_jobs >= max_num_parallel_jobs:
           num_running_jobs, max_num_parallel_jobs = get_num_jobs(job_name=experiment_name_stem, username=username)
-        time.sleep(0.05)
+          time.sleep(1)
+        time.sleep(1)
         print(f'Submitting job {job_nr}/{len(route_files) * num_repetitions}: {job_file}')
         jobid = subprocess.check_output(f'sbatch {job_file}', shell=True).decode('utf-8').strip().rsplit(' ',
                                                                                                          maxsplit=1)[-1]
@@ -289,27 +298,35 @@ def main():
         if os.path.exists(result_file):
           print('Remove file: ', result_file)
           Path(result_file).unlink()
+        num_running_jobs, max_num_parallel_jobs = get_num_jobs(job_name=experiment_name_stem, username=username)
+        print(f'{num_running_jobs}/{max_num_parallel_jobs} jobs are running...')
+        while num_running_jobs >= max_num_parallel_jobs:
+          print("Waiting for other jobs...")
+          num_running_jobs, max_num_parallel_jobs = get_num_jobs(job_name=experiment_name_stem, username=username)
+          time.sleep(5)
+        time.sleep(1)
         print(f'resubmit sbatch {job_file}')
         jobid = subprocess.check_output(f'sbatch {job_file}', shell=True).decode('utf-8').strip().rsplit(' ',
                                                                                                          maxsplit=1)[-1]
         meta_jobs[jobid] = (False, job_file, result_file, resubmitted + 1)
         meta_jobs[k] = (True, None, None, 0)
-
-    time.sleep(10)
+      time.sleep(2)
+    time.sleep(8)
 
     if num_running_jobs == 0:
       training_finished = True
 
-  print('Evaluation finished. Start parsing results.')
-  eval_root = f'{code_root}/evaluation/{experiment_name_root}'
-  subprocess.check_call(
-      f'python {code_root}/tools/result_parser.py --xml {code_root}/leaderboard/data/{benchmark}.xml '
-      f'--results {eval_root} --log_dir {eval_root} --town_maps {code_root}/leaderboard/data/town_maps_xodr '
-      f'--map_dir {code_root}/leaderboard/data/town_maps_tga --device cpu '
-      f'--map_data_folder {code_root}/tools/proxy_simulator/map_data --subsample 1 --strict --visualize_infractions',
-      stdout=sys.stdout,
-      stderr=sys.stderr,
-      shell=True)
+  print('Evaluation finished.')
+  # print('Evaluation finished. Start parsing results.')
+  # eval_root = f'{code_root}/evaluation/{experiment_name_root}'
+  # subprocess.check_call(
+  #     f'python {code_root}/tools/result_parser.py --xml {code_root}/leaderboard/data/{benchmark}.xml '
+  #     f'--results {eval_root} --log_dir {eval_root} --town_maps {code_root}/leaderboard/data/town_maps_xodr '
+  #     f'--map_dir {code_root}/leaderboard/data/town_maps_tga --device cpu '
+  #     f'--map_data_folder {code_root}/tools/proxy_simulator/map_data --subsample 1 --strict --visualize_infractions',
+  #     stdout=sys.stdout,
+  #     stderr=sys.stderr,
+  #     shell=True)
 
 
 if __name__ == '__main__':

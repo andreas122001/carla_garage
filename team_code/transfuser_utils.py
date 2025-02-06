@@ -605,6 +605,7 @@ def create_projection_grid(config):
            all_valid: The same voxel grid containing a bool that indicates whether the voxel is visible from the
            camera.
   """
+  # meters_per_pixel = 1.0 / (config.pixels_per_meter * 2.0)
   meters_per_pixel = 1.0 / config.pixels_per_meter
   # + half a pixel because we want the center of the voxel.
   widths = torch.arange(config.min_x, config.max_x, meters_per_pixel) + (meters_per_pixel * 0.5)
@@ -613,6 +614,7 @@ def create_projection_grid(config):
   heights = torch.arange(config.min_z_projection, config.max_z_projection,
                          meters_per_pixel_height) + (meters_per_pixel_height * 0.5)
 
+  print(widths.shape, depths.shape, heights.shape)
   depths, widths, heights = torch.meshgrid(depths, widths, heights, indexing='ij')
   test_cloud = torch.stack((depths, widths, heights), dim=0)  # CARLA coordinate system
   _, d, w, h = test_cloud.shape  # channel, depth, width, height
@@ -709,7 +711,7 @@ def draw_probability_boxes(img, speed_prob, target_speeds, color=(128, 128, 128)
   colors = [color for _ in range(len(speed_prob))]
   colors[speed_index] = color_selected
   start_x = 600
-  width_bar = 20 * 4
+  width_bar = 10 * 4  # Must have space for 7 speeds
   width_space = 10
   cv2.rectangle(img, (start_x, 0), (1024, 155), (255, 255, 255), cv2.FILLED)
 

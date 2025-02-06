@@ -20,7 +20,7 @@ from map_utils import MapImage
 ImageShow.register(ImageShow.EogViewer, 0)
 
 # Global Flags
-PIXELS_PER_METER = 5
+PIXELS_PER_METER = 2
 PIXELS_AHEAD_VEHICLE = 100
 
 

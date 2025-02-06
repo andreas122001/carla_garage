@@ -456,6 +456,7 @@ class CSVParser:
     abort = False
     # aggregate files
     for f in filenames:
+      print(f)
       with open(f, encoding='utf-8') as json_file:
         evaluation_data = ujson.load(json_file)
 
@@ -576,6 +577,9 @@ class CSVParser:
         'label': label,
         'value': value
     } for label, value in zip(total_score_labels, total_score_values)]
+    print(route_matching)
+    print(route_to_id[route_evaluation[0]['route_id']])
+    print(route_evaluation[0])
     route_scenarios = [{
         'route': route['route_id'],
         'town': route_matching[route_to_id[route['route_id']]]['town'],

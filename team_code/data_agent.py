@@ -30,7 +30,7 @@ class DataAgent(AutoPilot):
     Child of the autopilot that additionally runs data collection and storage.
     """
 
-  def setup(self, path_to_conf_file, route_index=None):
+  def setup(self, path_to_conf_file, route_index=None, traffic_manager=None):
     super().setup(path_to_conf_file, route_index)
 
     self.weathers_ids = list(self.config.weathers)

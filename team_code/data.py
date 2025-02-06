@@ -67,19 +67,31 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
     self.angle_distribution = np.arange(len(config.angles)).tolist()
     self.speed_distribution = np.arange(len(config.target_speeds)).tolist()
     self.semantic_distribution = np.arange(len(config.semantic_weights)).tolist()
+
+    self._load_index(root=root, config=config, estimate_class_distributions=False, estimate_sem_distribution=False, rank=0)
+
+  def _load_index(self, root, config, estimate_class_distributions=False, estimate_sem_distribution=False, rank=0):
     total_routes = 0
     perfect_routes = 0
     crashed_routes = 0
 
-    for sub_root in tqdm(root, file=sys.stdout, disable=rank != 0):
+    for sub_root in tqdm(root, file=sys.stdout, disable=rank != 0 or len(root) < 1):
 
       # list subdirectories in root
       routes = next(os.walk(sub_root))[1]
 
       for route in routes:
         route_dir = sub_root + '/' + route
+        # print("route_dir", route_dir)
+
+        # Find equiv file in test_dataset: for comparison, only allow routes that succeded in the other dataset to prevent one agent having data advantage
+        # test_folder = sub_root.replace("dataset_4hz_2024_10_26", "dataset_default_expert2024_11_08")
+        # equiv_route = [r for r in os.listdir(test_folder) if "_".join(route.split("_")[:2]) in r][0]
+        # equiv_route_dir = os.path.join(test_folder, equiv_route)
+
 
         if not os.path.isfile(route_dir + '/results.json.gz'):
+          print(route)
           total_routes += 1
           crashed_routes += 1
           continue
@@ -90,8 +102,10 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
 
         # We skip data where the expert did not achieve perfect driving score
         if results_route['scores']['score_composed'] < 100.0:
+          # print("RESULTS NOT PERFECT")
           continue
 
+        # print("route", route)
         perfect_routes += 1
 
         num_seq = len(os.listdir(route_dir + '/lidar'))
@@ -562,10 +576,12 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
         temporal_lidar_bev = np.concatenate(temporal_lidars, axis=0)
 
     if self.config.detect_boxes or self.config.use_plant:
-      bounding_boxes, future_bounding_boxes = self.parse_bounding_boxes(loaded_boxes[self.config.seq_len - 1],
-                                                                        loaded_future_boxes[self.config.seq_len - 1],
-                                                                        y_augmentation=aug_translation,
-                                                                        yaw_augmentation=aug_rotation)
+      bounding_boxes, future_bounding_boxes = self.parse_bounding_boxes(
+        loaded_boxes[self.config.seq_len - 1],
+        loaded_future_boxes[self.config.seq_len - 1],
+        y_augmentation=aug_translation,
+        yaw_augmentation=aug_rotation
+      )
 
       # Pad bounding boxes to a fixed number
       bounding_boxes = np.array(bounding_boxes)
@@ -923,7 +939,7 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
 
     if bbox_dict['class'] == 'car':
       bbox[5] = bbox_dict['speed']
-      bbox[6] = bbox_dict['brake']
+      bbox[6] = bbox_dict['brake'] if not np.isnan(bbox_dict['brake']) else 0.  # this is sometimes NaN for some reason
       bbox[7] = 0
     elif bbox_dict['class'] == 'walker':
       bbox[5] = bbox_dict['speed']
@@ -952,6 +968,10 @@ class CARLA_Data(Dataset):  # pylint: disable=locally-disabled, invalid-name
     for current_box in boxes:
       # Ego car is always at the origin. We don't predict it.
       if current_box['class'] == 'ego_car':
+        continue
+      # if current_box['class'] in ['weather', 'ego_car', 'landmark', 'ego_info']:
+      #   continue 
+      if "extent" not in current_box.keys():
         continue
 
       bbox, height = self.get_bbox_label(current_box, y_augmentation, yaw_augmentation)

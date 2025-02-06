@@ -13,9 +13,11 @@ import argparse
 import time
 import subprocess
 from omegaconf import OmegaConf
+from tqdm import tqdm
 
 from traffic_light import TrafficLightHandler
 from server_utils import CarlaServerManager
+import torch
 
 COLOR_WHITE = (255, 255, 255)
 
@@ -38,21 +40,30 @@ class MapImage(object):
     world_offset = np.array([min_x, min_y], dtype=np.float32)
     width_in_meters = max(max_x - min_x, max_y - min_y)
     width_in_pixels = round(pixels_per_meter_local * width_in_meters)
-
-    road_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    shoulder_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    parking_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    sidewalk_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    lane_marking_yellow_broken_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    lane_marking_yellow_solid_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    lane_marking_white_broken_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    lane_marking_white_solid_surface = pygame.Surface((width_in_pixels, width_in_pixels))
-    lane_marking_all_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    
+    print("Width:", width_in_pixels)
+    print("Generating road surface...")
+    print("Needed size:", 5*width_in_pixels*width_in_pixels / (1024**3), "GB")
+    # np_surface = np.zeros((width_in_pixels, width_in_pixels))
+    road_surface = pygame.Surface((width_in_pixels, width_in_pixels), depth=8)
+    print("Road surface created.")
+    sidewalk_surface = pygame.Surface((width_in_pixels, width_in_pixels), depth=8)
+    print("Sidewalk surface created.")
+    lane_marking_white_broken_surface = pygame.Surface((width_in_pixels, width_in_pixels), depth=8)
+    print("White broken line surface created.")
+    lane_marking_all_surface = pygame.Surface((width_in_pixels, width_in_pixels), depth=8)
+    print("All line surface created.")
+    # shoulder_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    # parking_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    # lane_marking_yellow_broken_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    # lane_marking_yellow_solid_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    # lane_marking_white_solid_surface = pygame.Surface((width_in_pixels, width_in_pixels))
 
     topology = [x[0] for x in carla_map_local.get_topology()]
     topology = sorted(topology, key=lambda w: w.transform.location.z)
 
-    for waypoint in topology:
+    print("Iterating waypoints...")
+    for waypoint in tqdm(topology, desc="Waypoints"):
       waypoints = [waypoint]
       # Generate waypoints of a road id. Stop when road id differs
       nxt = waypoint.next(precision)
@@ -96,23 +107,25 @@ class MapImage(object):
 
       MapImage.draw_lane(sidewalk_surface, sidewalk[0], COLOR_WHITE, pixels_per_meter_local, world_offset)
       MapImage.draw_lane(sidewalk_surface, sidewalk[1], COLOR_WHITE, pixels_per_meter_local, world_offset)
-      MapImage.draw_lane(shoulder_surface, shoulder[0], COLOR_WHITE, pixels_per_meter_local, world_offset)
-      MapImage.draw_lane(shoulder_surface, shoulder[1], COLOR_WHITE, pixels_per_meter_local, world_offset)
-      MapImage.draw_lane(parking_surface, parking[0], COLOR_WHITE, pixels_per_meter_local, world_offset)
-      MapImage.draw_lane(parking_surface, parking[1], COLOR_WHITE, pixels_per_meter_local, world_offset)
 
-      if not waypoint.is_junction:
-        MapImage.draw_lane_marking_single_side(lane_marking_yellow_broken_surface, lane_marking_yellow_solid_surface,
-                                               lane_marking_white_broken_surface, lane_marking_white_solid_surface,
-                                               lane_marking_all_surface, waypoints, -1, pixels_per_meter_local,
-                                               world_offset)
-        MapImage.draw_lane_marking_single_side(lane_marking_yellow_broken_surface, lane_marking_yellow_solid_surface,
-                                               lane_marking_white_broken_surface, lane_marking_white_solid_surface,
-                                               lane_marking_all_surface, waypoints, 1, pixels_per_meter_local,
-                                               world_offset)
+      # MapImage.draw_lane(shoulder_surface, shoulder[0], COLOR_WHITE, pixels_per_meter_local, world_offset)
+      # MapImage.draw_lane(shoulder_surface, shoulder[1], COLOR_WHITE, pixels_per_meter_local, world_offset)
+      # MapImage.draw_lane(parking_surface, parking[0], COLOR_WHITE, pixels_per_meter_local, world_offset)
+      # MapImage.draw_lane(parking_surface, parking[1], COLOR_WHITE, pixels_per_meter_local, world_offset)
+
+      # if not waypoint.is_junction:
+      #   MapImage.draw_lane_marking_single_side(lane_marking_yellow_broken_surface, lane_marking_yellow_solid_surface,
+      #                                          lane_marking_white_broken_surface, lane_marking_white_solid_surface,
+      #                                          lane_marking_all_surface, waypoints, -1, pixels_per_meter_local,
+      #                                          world_offset)
+      #   MapImage.draw_lane_marking_single_side(lane_marking_yellow_broken_surface, lane_marking_yellow_solid_surface,
+      #                                          lane_marking_white_broken_surface, lane_marking_white_solid_surface,
+      #                                          lane_marking_all_surface, waypoints, 1, pixels_per_meter_local,
+      #                                          world_offset)
 
     # stoplines
-    stopline_surface = pygame.Surface((width_in_pixels, width_in_pixels))
+    print("Creating stoplines...")
+    stopline_surface = pygame.Surface((width_in_pixels, width_in_pixels), depth=8)
 
     for stopline_vertices in TrafficLightHandler.list_stopline_vtx:
       for loc_left, loc_right in stopline_vertices:
@@ -126,16 +139,17 @@ class MapImage(object):
     def _make_mask(x):
       return pygame.surfarray.array3d(x)[..., 0].astype(np.uint8)
 
+    print("Masking sufraces...")
     # make a dict
     dict_masks_local = {
         'road': _make_mask(road_surface),
-        'shoulder': _make_mask(shoulder_surface),
-        'parking': _make_mask(parking_surface),
+        # 'shoulder': _make_mask(shoulder_surface),
+        # 'parking': _make_mask(parking_surface),
         'sidewalk': _make_mask(sidewalk_surface),
-        'lane_marking_yellow_broken': _make_mask(lane_marking_yellow_broken_surface),
-        'lane_marking_yellow_solid': _make_mask(lane_marking_yellow_solid_surface),
+        # 'lane_marking_yellow_broken': _make_mask(lane_marking_yellow_broken_surface),
+        # 'lane_marking_yellow_solid': _make_mask(lane_marking_yellow_solid_surface),
         'lane_marking_white_broken': _make_mask(lane_marking_white_broken_surface),
-        'lane_marking_white_solid': _make_mask(lane_marking_white_solid_surface),
+        # 'lane_marking_white_solid': _make_mask(lane_marking_white_solid_surface),
         'lane_marking_all': _make_mask(lane_marking_all_surface),
         'stopline': _make_mask(stopline_surface),
         'world_offset': world_offset,
@@ -143,6 +157,7 @@ class MapImage(object):
         'width_in_meters': width_in_meters,
         'width_in_pixels': width_in_pixels
     }
+    print("Finished!")
     return dict_masks_local
 
   @staticmethod
@@ -268,21 +283,17 @@ class MapImage(object):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--save_dir', default='carla_gym/core/obs_manager/birdview/maps')
-  parser.add_argument('--pixels_per_meter', type=float, default=5.0)
+  parser.add_argument('--pixels_per_meter', type=float, default=4.0)
   parser.add_argument('--carla_sh_path', default='/home/ubuntu/apps/carla/carla994/CarlaUE4.sh')
   # Those maps in the repo are generated using calra 0.9.9.4.
   # The maps have been slightly changed in carla 0.9.10/0.9.11
 
   args = parser.parse_args()
 
-  # kill running carla server
-  with subprocess.Popen('killall -9 -r CarlaUE4-Linux', shell=True) as kill_process:
-    kill_process.wait()
-  time.sleep(1)
-
-  env_config = OmegaConf.load('endless_all.yaml')
-  server_manager = CarlaServerManager(args.carla_sh_path, configs=env_config)
-  server_manager.start()
+  # We don't run a server here, it is run externally
+  #env_config = OmegaConf.load('endless_all.yaml')
+  #server_manager = CarlaServerManager(args.carla_sh_path, configs=env_config)
+  #server_manager.start()
 
   save_dir = Path(args.save_dir)
   save_dir.mkdir(parents=True, exist_ok=True)
@@ -291,10 +302,9 @@ if __name__ == '__main__':
   pygame.init()
   display = pygame.display.set_mode((320, 320), 0, 32)
   pygame.display.flip()
-
-  pixels_per_meter = float(args.pixels_per_meter)
-  for cfg in server_manager.env_configs:
-    carla_map = cfg['env_configs']['carla_map']
+  if True:  # this is to prevent wrong indentation because it replaced a loop
+    pixels_per_meter = float(args.pixels_per_meter)
+    carla_map = 'Town13'
     hf_file_path = save_dir / (carla_map + '.h5')
 
     # pass if map h5 already exists
@@ -304,13 +314,16 @@ if __name__ == '__main__':
       map_hf.close()
       if np.isclose(hf_pixels_per_meter, pixels_per_meter):
         print(f'{carla_map}.h5 with pixels_per_meter={pixels_per_meter:.2f} already exists.')
-        continue
+        exit(1)
 
-    client = carla.Client('localhost', cfg['port'])
+    client = carla.Client('localhost', 2300)
     client.set_timeout(1000)
-    print(f'Generating {carla_map}.h5 with pixels_per_meter={pixels_per_meter:.2f}.')
-    world = client.load_world(carla_map)
+    print("Loading world...")
+    world = client.get_world()
+    if world.get_map().name.split("/")[-1] != carla_map:
+      world = client.load_world(carla_map)
 
+    print(f'Generating {carla_map}.h5 with pixels_per_meter={pixels_per_meter:.2f}.')
     dict_masks = MapImage.draw_map_image(world.get_map(), pixels_per_meter)
 
     with h5py.File(hf_file_path, 'w') as hf:
@@ -319,26 +332,27 @@ if __name__ == '__main__':
       hf.attrs['width_in_meters'] = dict_masks['width_in_meters']
       hf.attrs['width_in_pixels'] = dict_masks['width_in_pixels']
       hf.create_dataset('road', data=dict_masks['road'], compression='gzip', compression_opts=9)
-      hf.create_dataset('shoulder', data=dict_masks['shoulder'], compression='gzip', compression_opts=9)
-      hf.create_dataset('parking', data=dict_masks['parking'], compression='gzip', compression_opts=9)
+      # hf.create_dataset('shoulder', data=dict_masks['shoulder'], compression='gzip', compression_opts=9)
+      # hf.create_dataset('parking', data=dict_masks['parking'], compression='gzip', compression_opts=9)
       hf.create_dataset('sidewalk', data=dict_masks['sidewalk'], compression='gzip', compression_opts=9)
       hf.create_dataset('stopline', data=dict_masks['stopline'], compression='gzip', compression_opts=9)
       hf.create_dataset('lane_marking_all', data=dict_masks['lane_marking_all'], compression='gzip', compression_opts=9)
-      hf.create_dataset('lane_marking_yellow_broken',
-                        data=dict_masks['lane_marking_yellow_broken'],
-                        compression='gzip',
-                        compression_opts=9)
-      hf.create_dataset('lane_marking_yellow_solid',
-                        data=dict_masks['lane_marking_yellow_solid'],
-                        compression='gzip',
-                        compression_opts=9)
+      # hf.create_dataset('lane_marking_yellow_broken',
+      #                   data=dict_masks['lane_marking_yellow_broken'],
+      #                   compression='gzip',
+      #                   compression_opts=9)
+      # hf.create_dataset('lane_marking_yellow_solid',
+      #                   data=dict_masks['lane_marking_yellow_solid'],
+      #                   compression='gzip',
+      #                   compression_opts=9)
       hf.create_dataset('lane_marking_white_broken',
                         data=dict_masks['lane_marking_white_broken'],
                         compression='gzip',
                         compression_opts=9)
-      hf.create_dataset('lane_marking_white_solid',
-                        data=dict_masks['lane_marking_white_solid'],
-                        compression='gzip',
-                        compression_opts=9)
+      # hf.create_dataset('lane_marking_white_solid',
+      #                   data=dict_masks['lane_marking_white_solid'],
+      #                   compression='gzip',
+      #                   compression_opts=9)
 
-  server_manager.stop()
+      # We use external server, so we don't stop it
+      # server_manager.stop()

@@ -1,0 +1,21 @@
+ export CARLA_ROOT=/cluster/work/andrebw/carla_garage/carla/CARLA_Leaderboard_20
+ export WORK_DIR=/cluster/work/andrebw/carla_garage_main
+ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI
+ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+ export PYTHONPATH=$PYTHONPATH:$CARLA_ROOT/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg
+ export SCENARIO_RUNNER_ROOT=${WORK_DIR}/scenario_runner
+ export LEADERBOARD_ROOT=${WORK_DIR}/leaderboard
+ export PYTHONPATH="${CARLA_ROOT}/PythonAPI/carla/":"${SCENARIO_RUNNER_ROOT}":"${LEADERBOARD_ROOT}":${PYTHONPATH}
+ export CARLA_ROOT=/cluster/work/andrebw/carla_garage/carla/CARLA_Leaderboard_20
+ export WORK_DIR=/cluster/work/andrebw/carla_garage_main
+ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI
+ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+ export PYTHONPATH=$PYTHONPATH:$CARLA_ROOT/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg
+ export SCENARIO_RUNNER_ROOT=${WORK_DIR}/scenario_runner
+ export LEADERBOARD_ROOT=${WORK_DIR}/leaderboard
+ export PYTHONPATH="${CARLA_ROOT}/PythonAPI/carla/":"${SCENARIO_RUNNER_ROOT}":"${LEADERBOARD_ROOT}":${PYTHONPATH}
+
+ module load libjpeg-turbo/2.1.5.1-GCCcore-12.3.0
+
+conda activate garage
+

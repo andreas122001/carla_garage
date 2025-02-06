@@ -466,6 +466,7 @@ def main():
   val_set = CARLA_Data(root=config.val_data, config=config, shared_dict=shared_dict, rank=rank)
 
   if rank == 0:
+    print('Target speeds: ', config.target_speeds, flush=True)
     print('Target speed weights: ', config.target_speed_weights, flush=True)
     print('Angle weights: ', config.angle_weights, flush=True)
 

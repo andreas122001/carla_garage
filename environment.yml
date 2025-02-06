@@ -10,3 +10,7 @@ dependencies:
   - pip
   - pip:
     - -r team_code/requirements.txt
+    - carla==0.9.14
+    - webcolors
+    - -r /cluster/work/andrebw/carla_garage/leaderboard/requirements.txt
+    - -r /cluster/work/andrebw/carla_garage/scenario_runner/requirements.txt

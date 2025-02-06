@@ -1,0 +1,470 @@
+{
+    "OppositeVehicleRunningRedLight": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.9744086799999999,
+            "score_composed": 97.44086771999999
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.08462843138672486,
+            "score_composed": 8.46284336135568
+        }
+    },
+    "YieldToEmergencyVehicle": {
+        "scores_mean": {
+            "score_route": 98.0,
+            "score_penalty": 0.54652782,
+            "score_composed": 52.652779599999995
+        },
+        "scores_std": {
+            "score_route": 14.0,
+            "score_penalty": 0.11051474057910828,
+            "score_composed": 11.693855718381622
+        }
+    },
+    "Accident": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.4785905200000001,
+            "score_composed": 47.859051
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.07773676602309619,
+            "score_composed": 7.773677113026742
+        }
+    },
+    "HighwayExit": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.5796918636363636,
+            "score_composed": 57.96919256818182
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.13968341931824246,
+            "score_composed": 13.968340799759732
+        }
+    },
+    "ConstructionObstacleTwoWays": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.34823102,
+            "score_composed": 34.82310366
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.030933961465993972,
+            "score_composed": 3.093395579006407
+        }
+    },
+    "InvadingTurn": {
+        "scores_mean": {
+            "score_route": 99.71627450980391,
+            "score_penalty": 0.7295200392156863,
+            "score_composed": 72.6682770392157
+        },
+        "scores_std": {
+            "score_route": 2.0062421811312436,
+            "score_penalty": 0.13273482463919734,
+            "score_composed": 12.839857883721981
+        }
+    },
+    "HazardAtSideLaneTwoWays": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.5210015,
+            "score_composed": 52.10015246000001
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.08560668869410847,
+            "score_composed": 8.560668192389162
+        }
+    },
+    "EnterActorFlow": {
+        "scores_mean": {
+            "score_route": 96.37235294117647,
+            "score_penalty": 0.7176532941176471,
+            "score_composed": 68.13768147058823
+        },
+        "scores_std": {
+            "score_route": 17.959982923726027,
+            "score_penalty": 0.23692291729236592,
+            "score_composed": 26.058297209556095
+        }
+    },
+    "ConstructionObstacle": {
+        "scores_mean": {
+            "score_route": 98.50901960784314,
+            "score_penalty": 0.3280899215686275,
+            "score_composed": 31.318008313725493
+        },
+        "scores_std": {
+            "score_route": 10.542823459102957,
+            "score_penalty": 0.12113320924095694,
+            "score_composed": 7.584379197936288
+        }
+    },
+    "ParkingCrossingPedestrian": {
+        "scores_mean": {
+            "score_route": 96.44058823529413,
+            "score_penalty": 0.9057251176470588,
+            "score_composed": 88.56758615686276
+        },
+        "scores_std": {
+            "score_route": 15.564019392624106,
+            "score_penalty": 0.12871148051079312,
+            "score_composed": 19.64685148463607
+        }
+    },
+    "OppositeVehicleTakingPriority": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.9954874000000001,
+            "score_composed": 99.54874
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.0221129477736461,
+            "score_composed": 2.21129477736461
+        }
+    },
+    "MergerIntoSlowTraffic": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.68838606,
+            "score_composed": 68.83860482
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.2262965534383067,
+            "score_composed": 22.629655749479706
+        }
+    },
+    "ControlLoss": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.9607115999999999,
+            "score_composed": 96.07116548
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.04930661054706559,
+            "score_composed": 4.9306567287357135
+        }
+    },
+    "VehicleTurningRoutePedestrian": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.7907438,
+            "score_composed": 79.07438482
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.18516356226893024,
+            "score_composed": 18.51635157115633
+        }
+    },
+    "StaticCutIn": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.96751672,
+            "score_composed": 96.75167424
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.05031453352065981,
+            "score_composed": 5.031449001200646
+        }
+    },
+    "HazardAtSideLane": {
+        "scores_mean": {
+            "score_route": 98.0,
+            "score_penalty": 0.46151222000000003,
+            "score_composed": 44.151224299999996
+        },
+        "scores_std": {
+            "score_route": 14.0,
+            "score_penalty": 0.11236538870030931,
+            "score_composed": 10.337541219661539
+        }
+    },
+    "ParkingCutIn": {
+        "scores_mean": {
+            "score_route": 99.5092,
+            "score_penalty": 0.90201818,
+            "score_composed": 89.71101942
+        },
+        "scores_std": {
+            "score_route": 3.435600000000001,
+            "score_penalty": 0.08106791851594315,
+            "score_composed": 8.240481476466087
+        }
+    },
+    "AccidentTwoWays": {
+        "scores_mean": {
+            "score_route": 98.03921568627452,
+            "score_penalty": 0.6032771764705883,
+            "score_composed": 58.36693333333333
+        },
+        "scores_std": {
+            "score_route": 13.86483884679505,
+            "score_penalty": 0.0572160364637041,
+            "score_composed": 8.33024169391771
+        }
+    },
+    "HighwayCutIn": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8837106200000001,
+            "score_composed": 88.37105412000003
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.04568406547403153,
+            "score_composed": 4.568413654850548
+        }
+    },
+    "InterurbanAdvancedActorFlow": {
+        "scores_mean": {
+            "score_route": 98.53764705882354,
+            "score_penalty": 0.6091129019607844,
+            "score_composed": 59.448936176470596
+        },
+        "scores_std": {
+            "score_route": 10.340396811939748,
+            "score_penalty": 0.19374497474745597,
+            "score_composed": 19.182597414504443
+        }
+    },
+    "PriorityAtJunction": {
+        "scores_mean": {
+            "score_route": 98.06862745098039,
+            "score_penalty": 0.9881082352941175,
+            "score_composed": 96.87945098039218
+        },
+        "scores_std": {
+            "score_route": 13.656866264093123,
+            "score_penalty": 0.029273145339411076,
+            "score_composed": 13.801655007769154
+        }
+    },
+    "NonSignalizedJunctionLeftTurn": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.90891044,
+            "score_composed": 90.8910448
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.1988641867527846,
+            "score_composed": 19.886416521224756
+        }
+    },
+    "VehicleTurningRoute": {
+        "scores_mean": {
+            "score_route": 98.60279999999999,
+            "score_penalty": 0.9096154,
+            "score_composed": 90.15659331999997
+        },
+        "scores_std": {
+            "score_route": 9.780399999999997,
+            "score_penalty": 0.07443692668964778,
+            "score_composed": 11.867926320338011
+        }
+    },
+    "DynamicObjectCrossing": {
+        "scores_mean": {
+            "score_route": 78.0,
+            "score_penalty": 0.8704822400000001,
+            "score_composed": 65.04822304000001
+        },
+        "scores_std": {
+            "score_route": 41.42463035441596,
+            "score_penalty": 0.10732050121436446,
+            "score_composed": 35.51476848866652
+        }
+    },
+    "SignalizedJunctionRightTurn": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.7990556400000002,
+            "score_composed": 79.90556302
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.20690328872686004,
+            "score_composed": 20.69033003001906
+        }
+    },
+    "ParkedObstacle": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.50657842,
+            "score_composed": 50.65784364
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.07842075744829045,
+            "score_composed": 7.842076230739211
+        }
+    },
+    "ParkedObstacleTwoWays": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.5872575200000001,
+            "score_composed": 58.72575322000001
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.019143494944487017,
+            "score_composed": 1.9143444778056775
+        }
+    },
+    "MergerIntoSlowTrafficV2": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.7200000000000002,
+            "score_composed": 72.0
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.18330302779823363,
+            "score_composed": 18.33030277982336
+        }
+    },
+    "EnterActorFlowV2": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8145727799999999,
+            "score_composed": 81.45727443999999
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.17552295800063195,
+            "score_composed": 17.55229501864399
+        }
+    },
+    "VehicleOpensDoorTwoWays": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.5299172200000001,
+            "score_composed": 52.99172004
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.09908323075138194,
+            "score_composed": 9.908327599372488
+        }
+    },
+    "SignalizedJunctionLeftTurn": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8516595800000002,
+            "score_composed": 85.16595754
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.18691727347402542,
+            "score_composed": 18.691729752544237
+        }
+    },
+    "InterurbanActorFlow": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.83683322,
+            "score_composed": 83.68332011999999
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.1816093337341768,
+            "score_composed": 18.160937102823286
+        }
+    },
+    "HardBreakRoute": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8339158799999999,
+            "score_composed": 83.39158830000001
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.07166749562099684,
+            "score_composed": 7.166751898422702
+        }
+    },
+    "PedestrianCrossing": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8678060999999999,
+            "score_composed": 86.78061208
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.11197695067168957,
+            "score_composed": 11.197693094896515
+        }
+    },
+    "NonSignalizedJunctionRightTurn": {
+        "scores_mean": {
+            "score_route": 98.0,
+            "score_penalty": 0.8826579000000001,
+            "score_composed": 86.26578988000001
+        },
+        "scores_std": {
+            "score_route": 14.0,
+            "score_penalty": 0.18581175423522056,
+            "score_composed": 22.233381217309848
+        }
+    },
+    "ParkingExit": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.64510204,
+            "score_composed": 64.51020606000002
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.0881912804038948,
+            "score_composed": 8.819126656484285
+        }
+    },
+    "BlockedIntersection": {
+        "scores_mean": {
+            "score_route": 100.0,
+            "score_penalty": 0.8743642399999999,
+            "score_composed": 87.43642429999998
+        },
+        "scores_std": {
+            "score_route": 0.0,
+            "score_penalty": 0.124486644320033,
+            "score_composed": 12.44866221757753
+        }
+    },
+    "CrossingBicycleFlow": {
+        "scores_mean": {
+            "score_route": 96.0,
+            "score_penalty": 0.9330884399999999,
+            "score_composed": 89.30884534
+        },
+        "scores_std": {
+            "score_route": 19.595917942265423,
+            "score_penalty": 0.1324069909992913,
+            "score_composed": 22.48970531823893
+        }
+    },
+    "Total": {
+        "scores_mean": {
+            "score_route": 98.73146646026831,
+            "score_penalty": 0.746101098681865,
+            "score_composed": 73.39806965312555
+        },
+        "scores_std": {
+            "score_route": 3.5941854455868887,
+            "score_penalty": 0.18598484608913465,
+            "score_composed": 18.5783988324313
+        }
+    }
+}

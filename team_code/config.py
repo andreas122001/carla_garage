@@ -27,7 +27,7 @@ class GlobalConfig:
     """ base architecture configurations """
 
     # CUSTOM
-    self.scale = 0.5
+    self.scale = 1.0
     # -----------------------------------------------------------------------------
     # Autopilot
     # -----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ class GlobalConfig:
     self.num_lidar_hits_for_detection = 7
     # How many pixels make up 1 meter.
     # 1 / pixels_per_meter = size of pixel in meters
-    self.pixels_per_meter = 1.0  # TODO: check if correct
+    self.pixels_per_meter = 2.0  # TODO: check if correct
     # Max number of LiDAR points per pixel in voxelized LiDAR
     self.hist_max_per_pixel = 5
     # Height at which the LiDAR points are split into the 2 channels.
@@ -169,7 +169,7 @@ class GlobalConfig:
     self.estimate_class_distributions = False
     self.estimate_semantic_distribution = False
     # Class weights applied to the cross entropy losses
-    # Computed from the v07 all dataset
+    # Computed from custom dataset
     self.target_speed_weights = [
       1.0751805823984797,
       2.4468032827165955,
@@ -179,8 +179,13 @@ class GlobalConfig:
       5.380376053598444,
       0.7100077004249494,
     ]
-    self.angle_weights = [
-        204.25901201602136, 7.554315623148331, 0.21388916461734406, 5.476446162657503, 207.86684782608697
+    # not used if not direct control
+    self.angle_weights = [  
+      19916.0,
+      13.878745644599302,
+      0.2042080223115413,
+      33.02819237147595,
+      1532.0,
     ]
     # We don't use weighting here
     self.semantic_weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
@@ -577,7 +582,7 @@ class GlobalConfig:
       setattr(self, k, v)
 
     self.root_dir = root_dir
-    if True or 'auto_data' in kwargs and kwargs['auto_data']:
+    if not ('no_auto_data' in kwargs and kwargs['no_auto_data']):
 
       if setting == 'all':
         first_val_town = 'validation'

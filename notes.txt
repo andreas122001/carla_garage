@@ -1,0 +1,35 @@
+[andrebw@idun-login1 route0]$ ls                                                                            
+bev_semantics            boxes  depth_augmented  measurements     results.json.gz  rgb_augmented  semantics_augmented 
+bev_semantics_augmented  depth  lidar            records.json.gz  rgb              semantics
+[andrebw@idun-login1 route0]$ pwd
+{data_root}/data/{dataset}/{town}/{routes_repetitions}/{route}
+
+
+
+, so I commented out that filtering in the code.
+
+- One problem at first was that the lb2 branch saves data in a different way (e.g. different file path) than what lb1's train.py expects (it expects the something specific like "{data_root}/{town}/Route_{town}_Repetition{num}/{route}/[rgb:lidar:etc.]", which lb2 slurm data generation does not handle).
+
+
+- The CARLA_Data-class filters out all routes that are not perfect, and since the autopilot.py was not able to get a perfect score on lb2 it was always filtered out and there was nothing to train on 
+
+- The semantics seem to have more classes on the lb2 branch (25) than the main branch (23) (leading to out of bounds error in CARLA_Data.__getitem__)
+Now, it seem that there is some incompatibility between the BEV 
+
+- The bounding boxes seems to have some
+
+- Bounding boxes have NaN-values from bb_vehicle_to_image_system in transfuser_utils.py
+
+- Weird CUDA assertion errors ("on device") when disabling bounding boxes and semantic segmentation
+
+
+semantics_i = self.converter[loaded_semantics[self.config.seq_len - 1]]  # index 24 out of bounds of converter
+
+
+
+
+Some more insights:
+
+lb2 semantic segmentations actually has 28 different values whereas lb1 only has 24 (which is converted to one of 6 classes in the converter). The fix for this is to add 6 more entries in the GlobalConfig.converter list in lb1 (I just set them all to unlabeled/other/0 as I don't know what it is supposed to be).
+The data_agent in lb2 actually augments all data (if augment is specified in config) before saving the sensor data, while lb1 seems to add augmentations after loading the sensor data again. Fix is just to disable augmentation in lb1 config.
+Some of the configs were also not the same across lb1/lb2, so I changed them to be the same (e.g .pixels_per_meter)

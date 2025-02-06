@@ -1,0 +1,2 @@
+# Check what logs are not finished:
+for f in evaluation/tfpp-default-max_speed21_lb2_model_0030/tfpp-default-max_speed21_lb2/run_files/logs/qsub_out*; do if [[ $(tail -n 50 $f) != *"[Agent]"* ]]; then echo $f; fi; done

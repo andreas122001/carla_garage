@@ -33,7 +33,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
     Drives by accessing the simulator directly.
     """
 
-  def setup(self, path_to_conf_file, route_index=None):
+  def setup(self, path_to_conf_file, route_index=None, traffic_manager=None):
 
     self.track = autonomous_agent.Track.MAP
     self.config_path = path_to_conf_file
@@ -94,7 +94,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
     self.next_commands = deque(maxlen=2)
     self.next_commands.append(4)
     self.next_commands.append(4)
-    self.target_point_prev = [1e5, 1e5]
+    self.target_point_prev = [1e5, 1e5, 1e5]
 
     # Initialize controls
     self.steer = 0.0
@@ -341,9 +341,9 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
     speed = tick_data['speed']
 
     # We save the target point and route in the local coordinate frame of the ego vehicle
-    ego_far_node = t_u.inverse_conversion_2d(target_point, pos, theta).tolist()
-    ego_next_far_node = t_u.inverse_conversion_2d(next_target_point, pos, theta).tolist()
-    ego_aim_point = t_u.inverse_conversion_2d(self.aim_wp, pos, theta).tolist()
+    ego_far_node = t_u.inverse_conversion_2d(target_point[:2], pos, theta).tolist()
+    ego_next_far_node = t_u.inverse_conversion_2d(next_target_point[:2], pos, theta).tolist()
+    ego_aim_point = t_u.inverse_conversion_2d(self.aim_wp[:2], pos, theta).tolist()
 
     dense_route = []
     if len(self.remaining_route) >= self.config.num_route_points_saved:
@@ -352,7 +352,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
       remaining_route = list(self.remaining_route)
 
     for checkpoint in remaining_route:
-      dense_route.append(t_u.inverse_conversion_2d(checkpoint[0], pos, theta).tolist())
+      dense_route.append(t_u.inverse_conversion_2d(checkpoint[0][:2], pos, theta).tolist())
 
     data = {
         'pos_global': pos,
@@ -1139,7 +1139,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
     cos_theta = math.cos(theta)
     sin_theta = math.sin(theta)
 
-    diff = target - pos
+    diff = target[:2] - pos
     aim_0 = (cos_theta * diff[0] + sin_theta * diff[1])
     aim_1 = (-sin_theta * diff[0] + cos_theta * diff[1])
 

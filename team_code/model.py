@@ -279,6 +279,9 @@ class LidarCenterNet(nn.Module):
   def forward(self, rgb, lidar_bev, target_point, ego_vel, command):
     bs = rgb.shape[0]
 
+    # lidar_bev = F.interpolate(lidar_bev, size=(256,256), mode='bilinear', align_corners=False)
+    # lidar_bev = torch.round(lidar_bev, decimals=1)
+
     if self.config.backbone == 'transFuser':
       bev_feature_grid, fused_features, image_feature_grid = self.backbone(rgb, lidar_bev)
     elif self.config.backbone == 'aim':
@@ -650,9 +653,9 @@ class LidarCenterNet(nn.Module):
       from birds_eye_view.chauffeurnet import ObsManager  # pylint: disable=locally-disabled, import-outside-toplevel
       from srunner.scenariomanager.carla_data_provider import CarlaDataProvider  # pylint: disable=locally-disabled, import-outside-toplevel
       obs_config = {
-          'width_in_pixels': self.config.lidar_resolution_width * 4,
-          'pixels_ev_to_bottom': self.config.lidar_resolution_height / 2.0 * 4,
-          'pixels_per_meter': self.config.pixels_per_meter * 4,
+          'width_in_pixels': self.config.lidar_resolution_width,
+          'pixels_ev_to_bottom': self.config.lidar_resolution_height / 2.0,
+          'pixels_per_meter': 2.0, #self.config.pixels_per_meter * self.config.scale,
           'history_idx': [-1],
           'scale_bbox': True,
           'scale_mask_col': 1.0,
@@ -685,12 +688,15 @@ class LidarCenterNet(nn.Module):
     # 0 Car, 1 Pedestrian, 2 Red light, 3 Stop sign
     color_classes = [np.array([255, 165, 0]), np.array([0, 255, 0]), np.array([255, 0, 0]), np.array([250, 160, 160])]
 
-    size_width = int((self.config.max_y - self.config.min_y) * self.config.pixels_per_meter)
-    size_height = int((self.config.max_x - self.config.min_x) * self.config.pixels_per_meter)
+    scale2 = 1.0
+    pixels_per_meter = 2.0  # self.config.pixels_per_meter
+    # pixels_per_meter = self.config.pixels_per_meter
+    size_width = int((self.config.max_y - self.config.min_y) * pixels_per_meter)
+    size_height = int((self.config.max_x - self.config.min_x) * pixels_per_meter)
 
-    scale_factor = 4
+    scale_factor = 4  # TODO: check if correct
     origin = ((size_width * scale_factor) // 2, (size_height * scale_factor) // 2)
-    loc_pixels_per_meter = self.config.pixels_per_meter * scale_factor
+    loc_pixels_per_meter = pixels_per_meter * scale_factor
 
     ## add rgb image and lidar
     if self.config.use_ground_plane:
@@ -701,8 +707,10 @@ class LidarCenterNet(nn.Module):
     images_lidar = 255 - (images_lidar * 255).astype(np.uint8)
     images_lidar = np.stack([images_lidar, images_lidar, images_lidar], axis=-1)
 
+    # cx, cy, _ = np.array(images_lidar.shape) // 2
+    # images_lidar = images_lidar[cx-64:cx+64 , cy-64:cy+64]
     images_lidar = cv2.resize(images_lidar,
-                              dsize=(images_lidar.shape[1] * scale_factor, images_lidar.shape[0] * scale_factor),
+                              dsize=(int(images_lidar.shape[1] * scale_factor*scale2), int(images_lidar.shape[0] * scale_factor*scale2)),
                               interpolation=cv2.INTER_NEAREST)
     # # Render road over image
     # road = self.ss_bev_manager.get_road()
@@ -719,15 +727,15 @@ class LidarCenterNet(nn.Module):
       alpha[bev_semantic_indices == 0] = 0.0
       alpha[bev_semantic_indices == 1] = 0.1
 
-      alpha = cv2.resize(alpha, dsize=(alpha.shape[1] * 4, alpha.shape[0] * 4), interpolation=cv2.INTER_NEAREST)
+      alpha = cv2.resize(alpha, dsize=(int(alpha.shape[1] * scale_factor), int(alpha.shape[0] * scale_factor)), interpolation=cv2.INTER_NEAREST)
       alpha = np.expand_dims(alpha, 2)
       bev_semantic_image = cv2.resize(bev_semantic_image,
-                                      dsize=(bev_semantic_image.shape[1] * 4, bev_semantic_image.shape[0] * 4),
+                                      dsize=(int(bev_semantic_image.shape[1] * scale_factor), int(bev_semantic_image.shape[0] * scale_factor)),
                                       interpolation=cv2.INTER_NEAREST)
 
       images_lidar = bev_semantic_image * alpha + (1 - alpha) * images_lidar
 
-    if gt_bev_semantic is not None:
+    if False and gt_bev_semantic is not None:
       bev_semantic_indices = gt_bev_semantic[0].detach().cpu().numpy()
       converter = np.array(self.config.bev_classes_list)
       converter[1][0:3] = 40
@@ -737,10 +745,10 @@ class LidarCenterNet(nn.Module):
       alpha[bev_semantic_indices == 0] = 0.0
       alpha[bev_semantic_indices == 1] = 0.1
 
-      alpha = cv2.resize(alpha, dsize=(alpha.shape[1] * 4, alpha.shape[0] * 4), interpolation=cv2.INTER_NEAREST)
+      alpha = cv2.resize(alpha, dsize=(int(alpha.shape[1] * scale_factor), int(alpha.shape[0] * scale_factor)), interpolation=cv2.INTER_NEAREST)
       alpha = np.expand_dims(alpha, 2)
       bev_semantic_image = cv2.resize(bev_semantic_image,
-                                      dsize=(bev_semantic_image.shape[1] * 4, bev_semantic_image.shape[0] * 4),
+                                      dsize=(int(bev_semantic_image.shape[1] * scale_factor), int(bev_semantic_image.shape[0] * scale_factor)),
                                       interpolation=cv2.INTER_NEAREST)
       images_lidar = bev_semantic_image * alpha + (1 - alpha) * images_lidar
 
@@ -828,6 +836,11 @@ class LidarCenterNet(nn.Module):
       images_lidar = np.ascontiguousarray(images_lidar, dtype=np.uint8)
       t_u.draw_probability_boxes(images_lidar, pred_speed, self.config.target_speeds)
 
+    # rgb_image = cv2.resize(rgb_image,
+    #                           dsize=(int(rgb_image.shape[1] * scale_factor / 2), int(rgb_image.shape[0] * scale_factor / 2)),
+    #                           interpolation=cv2.INTER_NEAREST)
+
+    # all_images = images_lidar
     all_images = np.concatenate((rgb_image, images_lidar), axis=0)
     all_images = Image.fromarray(all_images.astype(np.uint8))
 

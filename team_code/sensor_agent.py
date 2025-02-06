@@ -69,17 +69,16 @@ class SensorAgent(autonomous_agent_local.AutonomousAgent):
     self.config = GlobalConfig()
     # Overwrite all properties that were set in the saved config.
     self.config.__dict__.update(loaded_config.__dict__)
-    # self.config.pixels_per_meter = 2.0
-    # self.config.min_x = -(256 / self.config.pixels_per_meter) / 2
-    # self.config.max_x = (256 / self.config.pixels_per_meter) / 2
-    # self.config.min_y = -(256 / self.config.pixels_per_meter) / 2
-    # self.config.max_y = (256 / self.config.pixels_per_meter) / 2
-    # self.config.min_z = -(64 / self.config.pixels_per_meter) / 2
-    # self.config.max_z = (64 / self.config.pixels_per_meter) / 2
-    # self.config.min_z_projection = -40
-    # self.config.max_z_projection = 14 * 4
-    # self.lidar_resolution_width = 128
-    # self.lidar_resolution_height = 128
+    # self.config.pixels_per_meter = 1.0
+    # self.config.min_x = -int((256 / self.config.pixels_per_meter) / 2)
+    # self.config.max_x = int((256 / self.config.pixels_per_meter) / 2)
+    # self.config.min_y = -int((256 / self.config.pixels_per_meter) / 2)
+    # self.config.max_y = int((256 / self.config.pixels_per_meter) / 2)
+    # self.config.min_z = -int((64 / self.config.pixels_per_meter) / 2)
+    # self.config.max_z = int((64 / self.config.pixels_per_meter) / 2)
+    # self.config.min_z_projection = -int(10*4 / self.config.pixels_per_meter)
+    # self.config.max_z_projection = int(14*4 / self.config.pixels_per_meter)
+    # self.config.pixels_per_meter = 1.0
 
     # For models supporting different output modalities we select which one to use here.
     # 0: Waypoints
@@ -218,7 +217,7 @@ class SensorAgent(autonomous_agent_local.AutonomousAgent):
       self.lon_logger.ego_vehicle = vehicle
       self.lon_logger.world = vehicle.get_world()
 
-      self.nets[0].init_visualization()
+      # self.nets[0].init_visualization()
 
     self._route_planner = RoutePlanner(self.config.route_planner_min_distance, self.config.route_planner_max_distance)
     self._route_planner.set_route(self._global_plan, True)
@@ -440,6 +439,12 @@ class SensorAgent(autonomous_agent_local.AutonomousAgent):
 
     if self.config.backbone not in ('aim'):
       self.lidar_last = deepcopy(tick_data['lidar'])
+
+    # print(lidar_bev.shape)
+    # lidar_bev = F.interpolate(lidar_bev, size=(256,256), mode='nearest')
+    # lidar_bev = torch.round(lidar_bev, decimals=1)
+    # cx, cy = torch.tensor(lidar_bev.shape[2:]) // 2
+    # lidar_bev = lidar_bev[0, 0, cx-128:cx+128 , cy-128:cy+128].unsqueeze(0).unsqueeze(0)
 
     # prepare velocity input
     gt_velocity = tick_data['speed']
