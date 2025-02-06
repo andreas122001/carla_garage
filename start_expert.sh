@@ -12,7 +12,7 @@ export DEBUG_CHALLENGE=0
 export PTH_ROUTE=${WORK_DIR}/leaderboard/data/routes_devtest
 
 # Start the carla server
-export HOST="192.168.0.100"
+export HOST="localhost"
 export PORT=2000
 echo "Connection: $HOST:$PORT"
 
@@ -25,7 +25,7 @@ export CHECKPOINT_ENDPOINT=${PTH_ROUTE}.json
 export TEAM_CONFIG=${PTH_ROUTE}.xml
 export PTH_LOG='logs'
 export RESUME=1
-export DATAGEN=0
+export DATAGEN=1
 export SAVE_PATH='logs'
 export TM_SEED=0
 

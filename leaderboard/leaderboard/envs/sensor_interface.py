@@ -214,6 +214,7 @@ class SensorInterface(object):
             self._opendrive_tag = tag
 
     def update_sensor(self, tag, data, frame):
+        # print(f"Updating {tag} - {frame}")
         if tag not in self._sensors_objects:
             raise SensorConfigurationInvalid("The sensor with tag [{}] has not been created!".format(tag))
 
@@ -221,15 +222,18 @@ class SensorInterface(object):
 
     def get_data(self, frame):
         """Read the queue to get the sensors data"""
+        # print(self._sensors_objects.keys())
         try:
             data_dict = {}
             while len(data_dict.keys()) < len(self._sensors_objects.keys()):
+                # print(len(data_dict.keys()), len(self._sensors_objects.keys()))
                 # Don't wait for the opendrive sensor
                 if self._opendrive_tag and self._opendrive_tag not in data_dict.keys() \
                         and len(self._sensors_objects.keys()) == len(data_dict.keys()) + 1:
                     break
 
                 sensor_data = self._data_buffers.get(True, self._queue_timeout)
+                # print(f"Getting {sensor_data[0]} - {sensor_data[1]}")
                 if sensor_data[1] != frame:
                     continue
                 data_dict[sensor_data[0]] = ((sensor_data[1], sensor_data[2]))

@@ -1,0 +1,29 @@
+export CARLA_ROOT=/cluster/work/andrebw/carla_garage/carla/CARLA_Leaderboard_20
+export CARLA_SERVER=$CARLA_ROOT/CarlaUE4.sh
+export PYTHONPATH=$PYTHONPATH:$CARLA_ROOT/PythonAPI
+export PYTHONPATH=$PYTHONPATH:$CARLA_ROOT/PythonAPI/carla
+export PYTHONPATH=$PYTHONPATH:$CARLA_ROOT/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg
+export SCENARIO_RUNNER_ROOT=/cluster/work/andrebw/carla_garage/scenario_runner
+export LEADERBOARD_ROOT=/cluster/work/andrebw/carla_garage/leaderboard
+export PYTHONPATH="$CARLA_ROOT/PythonAPI/carla/":"$SCENARIO_RUNNER_ROOT":"$LEADERBOARD_ROOT":$PYTHONPATH
+
+export SAVE_PATH=/cluster/work/andrebw/carla_garage/test_logs
+export DATAGEN=0
+export CHALLENGE_TRACK_CODENAME=SENSORS
+export CHECKPOINT_ENDPOINT=/cluster/work/andrebw/carla_garage_main/evaluation/transfuserpp-lb2-initial_lav_model_0030/transfuserpp-lb2-initial_lav_e0_model_0030/results/routes_devtest.json
+
+module load Anaconda3/2024.02-1
+module load libjpeg-turbo/2.1.5.1-GCCcore-12.3.0
+conda activate garage
+
+python leaderboard/leaderboard/leaderboard_evaluator_local.py --routes=/cluster/work/andrebw/carla_garage/leaderboard/data/training/routes_training.xml \
+--repetitions=1 \
+--track=SENSORS \
+--checkpoint=${CHECKPOINT_ENDPOINT} \
+--agent=/cluster/work/andrebw/carla_garage_main/team_code/sensor_agent.py \
+--agent-config=/cluster/work/andrebw/carla_garage_main/logs/transfuserpp-lb2-initial \
+--debug=0 \
+--resume=0 \
+--port=2001 \
+--timeout=600 \
+--traffic-manager-port=2003 \

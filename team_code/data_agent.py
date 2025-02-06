@@ -2,6 +2,7 @@
 Child of the autopilot that additionally runs data collection and storage.
 """
 
+import threading
 import cv2
 import carla
 import random
@@ -373,6 +374,21 @@ class DataAgent(AutoPilot):
 
     def save_sensors(self, tick_data):
         frame = self.step // self.config.data_save_freq
+
+        active_threads = threading.enumerate()
+        active_threads = [t for t in active_threads if t is not threading.main_thread() and not t.daemon]
+        # if len(active_threads) < 16:
+        #     self._save_sensors_async(frame, tick_data)
+        # else:
+        self._save_sensors(frame, tick_data)
+
+    def _save_sensors_async(self, frame, tick_data):
+
+        # Create a new thread for saving the data
+        save_thread = threading.Thread(target=self._save_sensors, args=(frame, tick_data))
+        save_thread.start()
+
+    def _save_sensors(self, frame, tick_data):
 
         # CARLA images are already in opencv's BGR format.
         cv2.imwrite(str(self.save_path / 'rgb' / (f'{frame:04}.jpg')), tick_data['rgb'])

@@ -3,6 +3,9 @@
 carla
 logs
 tmp
+database
+
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

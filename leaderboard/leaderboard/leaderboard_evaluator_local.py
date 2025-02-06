@@ -13,6 +13,7 @@ Provisional code to evaluate Autonomous Agents for the CARLA Autonomous Driving 
 from __future__ import print_function
 
 print('start leaderboard_evaluator_local.py')
+import threading
 import traceback
 import argparse
 from argparse import RawTextHelpFormatter
@@ -27,6 +28,7 @@ import signal
 import socket
 import numpy as np
 import torch
+from time import sleep
 
 from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
@@ -201,14 +203,13 @@ class LeaderboardEvaluator(object):
             synchronous_mode = True,
             fixed_delta_seconds = 1.0 / self.frame_rate
         )
-        print("Settubg wirkd-...")
-        print(client.get_available_maps())
         world = client.get_world()
-        print("wolrd")
         world.apply_settings(settings)
-        print("Wirld set!")
+        if True or not args.traffic_manager_port:
+            traffic_manager_port = self.find_free_port()
+        else:
+            traffic_manager_port = args.traffic_manager_port
 
-        traffic_manager_port = self.find_free_port()
         traffic_manager = client.get_trafficmanager(traffic_manager_port)
         traffic_manager.set_synchronous_mode(True)
         traffic_manager.set_hybrid_physics_mode(True)
@@ -300,7 +301,7 @@ class LeaderboardEvaluator(object):
         route_name = f"{config.name}_rep{config.repetition_index}"
         self.statistics_manager.create_route_data(route_name, config.index)
 
-        print("\033[1m> Loading the world\033[0m")
+        print("\033[1m> Loading the world\033[0m", flush=True)
 
         # Load the world and the scenario
         try:
@@ -318,7 +319,7 @@ class LeaderboardEvaluator(object):
             self._cleanup()
             return True
 
-        print("\033[1m> Setting up the agent\033[0m")
+        print("\033[1m> Setting up the agent\033[0m", flush=True)
 
         # Set up the user's agent, and the timer to avoid freezing the simulation
         try:
@@ -386,7 +387,7 @@ class LeaderboardEvaluator(object):
             self._cleanup(result)
             return False
 
-        print("\033[1m> Running the route\033[0m")
+        print("\033[1m> Running the route\033[0m", flush=True)
 
         # Run the scenario
         try:
@@ -521,9 +522,21 @@ def main():
 
     pathlib.Path(arguments.checkpoint).parent.mkdir(parents=True, exist_ok=True)
 
+    print("Timeout:", arguments.timeout)
+
     statistics_manager = StatisticsManager(arguments.checkpoint, arguments.debug_checkpoint)
+    print("Statistics manager initialized.")
+    sleep(2)
     leaderboard_evaluator = LeaderboardEvaluator(arguments, statistics_manager)
+    print("Leaderboard evaluator initialized.")
     crashed = leaderboard_evaluator.run(arguments)
+
+    print("Waiting for threads...")
+    active_threads = threading.enumerate()
+    active_threads = [t for t in active_threads if t is not threading.main_thread() and not t.daemon]
+    print(f"Num active threads: {len(active_threads)}")
+    for t in active_threads:
+        t.join()
 
     del leaderboard_evaluator
 

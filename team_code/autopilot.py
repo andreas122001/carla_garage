@@ -129,7 +129,7 @@ class AutoPilot(autonomous_agent_local.AutonomousAgent):
         if os.environ.get("SAVE_PATH", None) is not None:
             now = datetime.datetime.now()
             string = pathlib.Path(os.environ["ROUTES"]).stem + "_"
-            string += f"route{self.route_index}_"
+            # string += f"route{self.route_index}_"
             string += "_".join(map(lambda x: f"{x:02}", (now.month, now.day, now.hour, now.minute, now.second)))
 
             self.save_path = pathlib.Path(os.environ["SAVE_PATH"]) / string

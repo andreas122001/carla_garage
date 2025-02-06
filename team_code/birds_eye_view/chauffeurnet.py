@@ -3,6 +3,7 @@ Utilities to render bird's eye view semantic segmentation maps.
 Code adapted from https://github.com/zhejz/carla-roach
 """
 
+import warnings
 import numpy as np
 import carla
 from gym import spaces
@@ -99,9 +100,16 @@ class ObsManager(ObsManagerBase):
 
       self._world_offset = np.array(hf.attrs['world_offset_in_meters'], dtype=np.float32)
       # in case they aren't close, print them to know what values they should be
+      map_pixels_per_meter = float(hf.attrs['pixels_per_meter'])
       if not np.isclose(self._pixels_per_meter, float(hf.attrs['pixels_per_meter'])):
         print(self._pixels_per_meter, float(hf.attrs['pixels_per_meter']))
       assert np.isclose(self._pixels_per_meter, float(hf.attrs['pixels_per_meter']))
+
+      # try:
+      #   assert np.isclose(self._pixels_per_meter, map_pixels_per_meter)
+      # except AssertionError:
+      #   warnings.warn(f"pixels_per_meter of ObsManager ({self._pixels_per_meter}) is not same as for map ({map_pixels_per_meter}). ObsManager.pixels_per_meter will now be set to the same as the map.")
+      #   self._pixels_per_meter = float(hf.attrs['pixels_per_meter'])
 
     self._distance_threshold = np.ceil(self._width / self._pixels_per_meter)
     # dilate road mask, lbc draw road polygon with 10px boarder

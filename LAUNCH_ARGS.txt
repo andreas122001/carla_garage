@@ -1,0 +1,32 @@
+python leaderboard/leaderboard/leaderboard_evaluator_local.py --port=2000 --traffic-manager-port=2002 --traffic-manager-seed=0 --routes=/cluster/work/andrebw/carla_garage/leaderboard/data/routes_validation.xml --repetitions=1 --track=MAP --checkpoint=/cluster/work/andrebw/carla_garage/datasets/dataset_test1/results/data/routes_validation_result.json --agent=/cluster/work/andrebw/carla_garage/team_code/data_agent.py --agent-config=TEAM_CONFIG --debug=0 --resume=1 --timeout=6000
+
+python leaderboard/leaderboard/leaderboard_evaluator_local.py \
+    --port=2000 \
+    --traffic-manager-port=2002 \
+    --traffic-manager-seed=0 \
+    --routes=/cluster/work/andrebw/carla_garage/leaderboard/data/routes_validation.xml \
+    --repetitions=1 \
+    --track=MAP \
+    --checkpoint=/cluster/work/andrebw/carla_garage/datasets/dataset_test1/results/data/routes_validation_result.json \
+    --agent=/cluster/work/andrebw/carla_garage/team_code/data_agent.py \
+    --agent-config=/cluster/work/andrebw/carla_garage/leaderboard/data/routes_validation.xml \
+    --debug=0 \
+    --resume=1 \
+    --timeout=6000
+
+
+python leaderboard/leaderboard/leaderboard_evaluator_local.py \
+    --port=2000 \
+    --traffic-manager-port=2002 \
+    --traffic-manager-seed=0 \
+    --routes=/cluster/work/andrebw/carla_garage/leaderboard/data/routes_validation.xml \
+    --repetitions=1 \
+    --track=MAP \
+    --checkpoint=/cluster/work/andrebw/carla_garage/datasets/dataset_test1/results/data/routes_validation_result.json \
+    --agent=/cluster/work/andrebw/carla_garage/team_code/autopilot.py \
+    --debug=0 \
+    --resume=1 \
+    --timeout=6000
+    
+routes='/cluster/work/andrebw/carla_garage/leaderboard/data/routes_devtest.xml'
+routes='/cluster/work/andrebw/carla_garage/leaderboard/data/routes_validation.xml'
