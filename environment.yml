@@ -1,5 +1,7 @@
-name: garage_2
+name: lb2
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
   - defaults
 dependencies:
@@ -7,6 +9,7 @@ dependencies:
   - freetype
   - libpng
   - python=3.10.15
+  - pytorch=2.5.0
   - pip
   - pip:
     - -r team_code/requirements.txt
