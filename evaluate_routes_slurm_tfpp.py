@@ -15,6 +15,8 @@ import ujson
 import argparse
 import sys
 
+CARLA_WAIT_TIME = 20  # seconds
+
 
 def create_run_eval_bash(
     bash_save_dir,
@@ -51,13 +53,14 @@ export TEAM_AGENT={team_code}/sensor_agent.py
 export TEAM_CONFIG={team_code}/checkpoints/{checkpoint}/
 export CHALLENGE_TRACK_CODENAME=SENSORS
 export REPETITIONS=1
-export RESUME=0
+export RESUME=1
 export SEED={seed}
 export CHECKPOINT_ENDPOINT={results_save_dir}/{route}.json
 export DEBUG_ENV_AGENT=0
+export DEBUG_CHALLENGE=1
 export RECORD=1
 export DIRECT=1
-export COMPILE=1
+export COMPILE=0
 export TOWN=eval
 export REPETITION=0
 export DATAGEN=0
@@ -226,7 +229,8 @@ def main():
         exp_names_tmp.append(experiment_name_stem + f"_e{i}")
         seeds.append(i)
     # route_path = f'leaderboard/data/{benchmark}_split/'
-    route_path = f"data/town13_selection/"
+    # route_path = f"data/town13_selection/"
+    route_path = f"data/50x36_Town13/ConstructionObstacleTwoWays/"
     route_pattern = "*.xml"
 
     carla_world_port_start = 10000
@@ -313,7 +317,9 @@ def main():
                     f"{carla_root}/CarlaUE4.sh -carla-rpc-port=${{FREE_WORLD_PORT}} -nosound -RenderOffScreen "
                     f"-carla-primary-port=0 -graphicsadapter=0 -carla-streaming-port=${{FREE_STREAMING_PORT}} &"
                 )
-                commands.append("sleep 180")  # Waits for CARLA to finish starting
+                commands.append(
+                    f"sleep {CARLA_WAIT_TIME}"
+                )  # Waits for CARLA to finish starting
                 create_run_eval_bash(
                     bash_save_dir,
                     results_save_dir,

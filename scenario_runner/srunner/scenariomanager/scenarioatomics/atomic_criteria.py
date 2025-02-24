@@ -406,12 +406,13 @@ class CollisionTest(Criterion):
         collision_event = TrafficEvent(event_type=actor_type, frame=GameTime.get_frame())
         collision_event.set_dict({'other_actor': event.other_actor, 'location': actor_location})
         collision_event.set_message(
-            "Agent collided against object with type={} and id={} at (x={}, y={}, z={})".format(
+            "Agent collided against object with type={} and id={} at (x={}, y={}, z={}, t={})".format(
                 event.other_actor.type_id,
                 event.other_actor.id,
                 round(actor_location.x, 3),
                 round(actor_location.y, 3),
-                round(actor_location.z, 3)))
+                round(actor_location.z, 3),
+                int(self._collision_time)))
         self.events.append(collision_event)
 
 
